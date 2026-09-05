@@ -1,0 +1,358 @@
+# Stravadash — design
+
+**Date:** 2026-09-05
+**Status:** approved for planning
+**Supersedes:** the stack table in `README.md` (which describes code no longer in the tree)
+
+## 1. What this is
+
+A single-athlete exercise dashboard over the Strava API. An upload to Strava
+appears on the dashboard about a second later, with no polling and no refresh.
+
+**In scope:** Strava OAuth, full history backfill, webhook ingest, live push to
+open tabs, an aggregate dashboard, route maps, installable PWA, optional push
+notification on activity arrival.
+
+**Out of scope, deliberately:**
+
+- **Multi-user.** Single-athlete by design, not merely unbuilt. One athlete id
+  is allowed to connect; everyone else is refused.
+- **Gamification and visual identity.** Streaks, levels, badges, goals and the
+  design language get their own brainstorm once this pipeline is proven. This
+  spec builds the data and one plain dashboard screen to hang them on.
+
+## 2. Stack
+
+| Layer | Choice |
+|---|---|
+| Frontend | React 19, TypeScript, Vite |
+| Routing | TanStack Router |
+| Server cache | TanStack Query |
+| UI | Tailwind 4, shadcn/ui |
+| Animation | Motion |
+| Charts | Apache ECharts (`echarts/core`, thin local React hook) |
+| Maps | MapLibre GL |
+| App feel | `vite-plugin-pwa` — installable, offline shell |
+| Notifications | Web Push (VAPID) |
+| Server | Cloudflare Worker (Hono) — serves SPA, API and webhook |
+| Database | Cloudflare D1 |
+| Live transport | Durable Object with WebSocket Hibernation |
+| Tests | Vitest + `@cloudflare/vitest-pool-workers`, Playwright |
+
+### Why Cloudflare rather than Supabase + Vercel
+
+Three arguments decided it.
+
+**Nothing sleeps.** The webhook must answer Strava within two seconds and may
+sit idle for weeks between training blocks. Workers are V8 isolates with no
+meaningful cold start and no free-tier project pausing. "Is the backend awake?"
+is not a question this endpoint should ever raise.
+
+**One origin, one deploy.** A single `wrangler deploy` ships the SPA, the API
+and `/webhook` to one hostname: no CORS, no cross-origin cookie handling, one
+secret store, one log stream.
+
+**Postgres wins little at this scale.** A lifetime history is a few thousand
+activities — single-digit megabytes. Aggregation happens in TypeScript over
+rows already in memory, where it is readable and unit-testable, so
+`date_trunc` and `generate_series` buy nothing. Storing a precomputed
+`local_date` at ingest removes SQLite's one real weakness.
+
+The cost accepted: no Postgres if the single-athlete assumption ever breaks,
+and the WebSocket fan-out is hand-written rather than managed. Both are
+understood and accepted; the second is also a stated learning goal.
+
+**Rejected:** Vercel frontend with a Cloudflare backend. It pays the two-origin
+tax *and* forfeits Cloudflare's single-deploy advantage.
+
+## 3. Architecture
+
+One Worker is the whole server.
+
+```
+                    ┌──────────────────────── Cloudflare ─────────────────────────┐
+                    │                                                             │
+Browser ───────────▶│  Worker (Hono)                                              │
+  SPA + API + WS    │   ├── assets binding ──▶ built SPA (index.html fallback)     │
+                    │   ├── /api/*          ──▶ JSON, session-cookie guarded      │
+                    │   ├── /auth/*         ──▶ Strava OAuth                      │
+                    │   ├── /webhook        ──▶ Strava events                     │
+                    │   └── /live           ──▶ upgrade, forwarded to the DO       │
+                    │                                                             │
+                    │  D1 ── athlete, activities, sync_state, push_subscriptions   │
+                    │  DO "live" ── holds hibernating WebSockets, broadcasts        │
+                    └─────────────────────────────────────────────────────────────┘
+```
+
+Modules, each independently testable:
+
+| Module | Responsibility | Depends on |
+|---|---|---|
+| `worker/routes/*` | HTTP surface, validation, auth guard | services |
+| `worker/strava/client.ts` | Strava HTTP, token refresh, rate-limit headers | fetch, token store |
+| `worker/strava/oauth.ts` | Code exchange, athlete gate | client, D1 |
+| `worker/db/*` | Typed D1 queries; no business logic | D1 |
+| `worker/sync/backfill.ts` | Resumable history import | client, D1 |
+| `worker/sync/ingest.ts` | One webhook event → one row change | client, D1, DO |
+| `worker/live/room.ts` | Durable Object; connections and broadcast | — |
+| `shared/aggregate.ts` | Pure functions: rows in, dashboard stats out | nothing |
+| `shared/types.ts` | Types crossing the Worker/client boundary | — |
+
+`shared/aggregate.ts` depending on nothing is deliberate: it is where the
+gamification layer will later grow, and it stays a pure-function unit test.
+
+## 4. Data flow
+
+### 4.1 Connect
+
+1. `GET /auth/login` → redirect to Strava, scope `activity:read_all`.
+2. `GET /auth/callback?code=` → exchange for tokens.
+3. **Athlete gate.** If `ALLOWED_ATHLETE_ID` is set and the returned athlete id
+   differs, refuse and store nothing. If unset, the first athlete to complete
+   OAuth claims the instance and their id is written to `athlete`.
+4. Store access token, refresh token and expiry in D1.
+5. Set a signed session cookie: `HttpOnly`, `Secure`, `SameSite=Lax`.
+6. Enqueue backfill via `ctx.waitUntil`, redirect to `/`.
+
+Access tokens are short-lived. The Strava client refreshes on expiry and
+persists the new pair; a refresh failure marks the athlete disconnected and the
+UI shows a reconnect prompt.
+
+### 4.2 Backfill
+
+`GET /athlete/activities` paged newest-first at `per_page=200`. After each page
+the last processed page and activity id are written to `sync_state`, so an
+interrupted run resumes rather than restarts.
+
+Strava enforces both a rolling 15-minute and a daily request cap; the exact
+figures depend on the application's tier and must be read off the app's API
+settings page rather than assumed. The client therefore reads the
+`X-RateLimit-Usage` / `X-RateLimit-Limit` response headers and, on approaching
+the limit or on a 429, stops and records the resume point instead of retrying
+in a loop. A scheduled Worker trigger resumes an incomplete backfill.
+
+Backfill writes are `INSERT ... ON CONFLICT(id) DO UPDATE`, so re-running is
+safe.
+
+### 4.3 Live ingest
+
+```
+Strava ──POST /webhook──▶ Worker ──200 OK immediately (< 2s)
+                            │
+                            └─ ctx.waitUntil:
+                                 GET /activities/{id}   (event carries no data)
+                                 upsert into D1
+                                 DO.fetch("/broadcast", {type, activity})
+                                      │
+Browser ◀── WebSocket ────────────────┘
+```
+
+Two Strava constraints shape this and are the reason for the shape:
+
+- The callback must return 200 within two seconds, so the handler acknowledges
+  before doing any work.
+- The event payload contains no activity data — only `object_id`,
+  `object_type`, `aspect_type`, `owner_id` — so the activity must be fetched.
+
+`aspect_type` maps to: `create`/`update` → fetch and upsert; `delete` → delete
+the row. Events whose `owner_id` is not the allowed athlete are acknowledged
+and dropped.
+
+Subscription validation is a separate `GET /webhook` returning `hub.challenge`
+when `hub.verify_token` matches `STRAVA_VERIFY_TOKEN`.
+
+### 4.4 Live push
+
+A single Durable Object instance, named `live`. `GET /live` upgrades and hands
+the socket to the DO, which accepts it with WebSocket Hibernation so idle
+connections cost no duration billing. `/broadcast` fans a message out to every
+held socket.
+
+**The socket is an optimisation, not the source of truth.** The client refetches
+on reconnect and on `visibilitychange`, so a dropped socket, a missed event or
+a failed fetch inside `waitUntil` self-corrects the next time the tab is
+looked at. This is what keeps a lost event from being a lost activity, and it
+is why the DO needs no persistence or replay.
+
+### 4.5 Notification
+
+If the user has granted permission and a push subscription is stored, ingest
+also sends a Web Push message via VAPID. Failure here is logged and ignored —
+it must never affect the D1 write or the broadcast. On iOS, push requires the
+PWA to have been installed to the home screen; the UI states this rather than
+silently failing.
+
+## 5. Data model (D1)
+
+```sql
+CREATE TABLE athlete (
+  id            INTEGER PRIMARY KEY,
+  access_token  TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  expires_at    INTEGER NOT NULL,
+  connected     INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE activities (
+  id             INTEGER PRIMARY KEY,
+  name           TEXT    NOT NULL,
+  sport_type     TEXT    NOT NULL,
+  start_date     TEXT    NOT NULL,  -- UTC ISO 8601
+  local_date     TEXT    NOT NULL,  -- YYYY-MM-DD in the athlete's local tz
+  elapsed_time   INTEGER NOT NULL,
+  moving_time    INTEGER NOT NULL,
+  distance       REAL    NOT NULL,
+  total_elevation_gain REAL,
+  average_speed  REAL,
+  average_heartrate REAL,
+  suffer_score   INTEGER,
+  polyline       TEXT,               -- summary_polyline, encoded
+  raw            TEXT    NOT NULL,   -- full JSON, for fields added later
+  updated_at     INTEGER NOT NULL
+);
+CREATE INDEX activities_local_date ON activities(local_date);
+CREATE INDEX activities_sport_type ON activities(sport_type);
+
+CREATE TABLE sync_state (
+  key   TEXT PRIMARY KEY,   -- 'backfill'
+  value TEXT NOT NULL       -- JSON: { page, complete, last_error }
+);
+
+CREATE TABLE push_subscriptions (
+  endpoint TEXT PRIMARY KEY,
+  keys     TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+```
+
+`local_date` is computed once at ingest. It is what makes day- and week-bucketed
+queries trivial in SQLite and is the mitigation for the absent `date_trunc`.
+
+`raw` is kept so a new dashboard field never requires a re-backfill. It is
+never sent to the client.
+
+### Where aggregation runs
+
+**In the browser.** `GET /api/activities` returns every activity as a slim row
+— the columns above minus `raw` and `polyline`, a few hundred bytes each, so
+low single-digit megabytes for a lifetime history. TanStack Query caches that
+one response and `shared/aggregate.ts` runs over it in the browser.
+
+This is why there is no `/api/stats`. Filtering by sport, date range or
+distance becomes a synchronous recomputation with no network round trip, which
+is what makes a dashboard feel fast; the same pure functions stay trivially
+unit-testable; and the gamification layer later grows in one place that needs
+no new endpoints. The Worker stays a thin data pipe. Should the dataset ever
+outgrow this — it will not at single-athlete scale — the same functions can be
+moved server-side unchanged, which is the reason they live in `shared/`.
+
+## 6. API surface
+
+| Route | Purpose |
+|---|---|
+| `GET /auth/login` | Redirect to Strava |
+| `GET /auth/callback` | Code exchange, athlete gate, session |
+| `POST /auth/logout` | Clear session |
+| `GET /api/me` | Athlete, connection state, backfill progress |
+| `GET /api/activities` | Every activity as a slim row (no `raw`), for the client cache |
+| `GET /api/activities/:id` | One activity in full, including polyline |
+| `POST /api/push/subscribe` | Store a push subscription |
+| `GET /live` | WebSocket upgrade |
+| `GET /webhook` | Subscription validation |
+| `POST /webhook` | Event receipt |
+
+Everything under `/api` and `/live` requires the session cookie. `/webhook` is
+unauthenticated by necessity and is guarded by `STRAVA_VERIFY_TOKEN` plus the
+`owner_id` check.
+
+## 7. Frontend
+
+```
+src/
+  routes/         TanStack Router file routes
+  components/     shadcn/ui primitives plus app components
+  charts/         useEChart hook and chart components
+  map/            MapLibre route map, polyline decode
+  hooks/          useLiveUpdates (WebSocket + refetch-on-visibility)
+  lib/            query client, api client
+```
+
+**ECharts is imported from `echarts/core`** with explicit chart and component
+registration, wrapped in a local `useEChart` hook — roughly thirty lines
+holding an instance in a ref, sizing it with a `ResizeObserver`, and disposing
+on unmount. The `echarts-for-react` wrapper is deliberately avoided: it is
+community-maintained and has historically lagged React major versions, and
+tree-shaking matters more here than the convenience.
+
+**MapLibre needs a tile source**, which it does not provide. OpenFreeMap or
+Protomaps, both usable without an account, are the candidates; the choice is
+made when the map is built and does not affect anything else.
+
+`useLiveUpdates` owns the socket: connect, exponential-backoff reconnect,
+invalidate the relevant TanStack Query keys on a message, and refetch on
+`visibilitychange`. No component talks to the socket directly.
+
+## 8. Error handling
+
+| Failure | Behaviour |
+|---|---|
+| Webhook handler throws | 200 was already sent; error logged, event lost, recovered by the next client refetch |
+| Strava fetch fails in ingest | Logged; row unchanged; corrected on next refetch or a later update event |
+| Rate limit hit during backfill | Resume point saved, run stops, scheduled trigger continues later |
+| Refresh token rejected | `connected = 0`, UI shows reconnect |
+| WebSocket drops | Backoff reconnect; refetch on reconnect closes the gap |
+| Wrong athlete completes OAuth | Refused, nothing stored |
+| Push send fails | Logged and ignored |
+
+The through-line: **no failure path is allowed to be silently
+unrecoverable.** Every one either self-heals on the next refetch or surfaces in
+`GET /api/me`.
+
+## 9. Testing
+
+- **`shared/aggregate.ts`** — plain Vitest. Pure functions over fixture rows.
+  The densest tests in the project, because this is where the logic lives and
+  where gamification will later grow.
+- **Worker** — `@cloudflare/vitest-pool-workers`, running against real workerd
+  and a real local D1. Covers routing, the auth guard, token refresh, ingest
+  upsert and delete, the athlete gate, and webhook validation.
+- **Durable Object** — connect two sockets, broadcast, assert both receive;
+  assert hibernation resumption.
+- **Backfill** — a fake Strava returning paged fixtures plus a 429, asserting
+  the run resumes from the saved point rather than restarting.
+- **Playwright** — connect flow against a stubbed Strava, dashboard render,
+  and a live-update test that posts a webhook event and asserts the DOM
+  updates without a reload.
+
+## 10. Configuration
+
+`wrangler.jsonc` bindings: `DB` (D1), `LIVE` (Durable Object), `ASSETS`, plus
+vars `APP_URL` and `ALLOWED_ATHLETE_ID`. A cron trigger (hourly) drives the
+`scheduled` handler that resumes an incomplete backfill after a rate-limit
+stop; it is a no-op once `sync_state.backfill` is marked complete.
+
+Secrets: `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_VERIFY_TOKEN`,
+`SESSION_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`. Locally these live
+in `.dev.vars`, which is gitignored and already present.
+
+Development webhooks need a public HTTPS URL, so `cloudflared tunnel --url
+http://localhost:5173` fronts the dev server. Strava permits exactly one
+subscription per application, so `scripts/webhook.ts` provides
+`create`/`list`/`delete`.
+
+## 11. Consequences
+
+- `README.md` is rewritten: its current stack table and setup steps describe
+  code that is not in the tree.
+- `package.json` dependency fields are repopulated. `pnpm-lock.yaml` already
+  pins React 19, TanStack Router/Query, Hono, Motion and Tailwind; ECharts,
+  MapLibre GL and the shadcn/ui primitives are additions, and `recharts` is
+  dropped.
+- `pnpm-workspace.yaml` already allowlists the `workerd` build script.
+
+## 12. Deferred
+
+The gamification layer — streaks, levels, badges, goals — and the visual
+identity, including the design direction in the referenced artifact. These get
+their own brainstorm against `shared/aggregate.ts` once activities are flowing.
+The dashboard built here is a placeholder, not the design language.
