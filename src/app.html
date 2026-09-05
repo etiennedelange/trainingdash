@@ -1,0 +1,42 @@
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="text-scale" content="scale" />
+		<meta name="description" content="Etienne de Lange – Software Engineer III with 14+ years of experience in .NET, Azure, Angular, and full-stack development." />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+		<script>
+			(function () {
+				var t = localStorage.getItem('theme');
+				var dark = t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches);
+				if (dark) document.documentElement.classList.add('dark');
+
+				// Apply time-of-day palette before first paint (mirrors timeTheme.ts)
+				var h = new Date().getHours() + new Date().getMinutes() / 60;
+				var A = /*palette*/[];
+				var K = ['--c-bg','--c-bg-alt','--c-bg-card','--c-accent','--c-muted','--c-border-soft'];
+				function lx(a, b, t) {
+					var pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+					return '#' + [[(pa>>16)&255,(pb>>16)&255],[(pa>>8)&255,(pb>>8)&255],[pa&255,pb&255]]
+						.map(function(c){return Math.round(c[0]+(c[1]-c[0])*t).toString(16).padStart(2,'0');}).join('');
+				}
+				var from = A[0], to = A[A.length-1];
+				for (var i = 0; i < A.length-1; i++) {
+					if (h >= A[i][0] && h < A[i+1][0]) { from = A[i]; to = A[i+1]; break; }
+				}
+				var span = to[0]-from[0], tt = span > 0 ? (h-from[0])/span : 0;
+				var fp = dark ? from[2] : from[1], tp = dark ? to[2] : to[1];
+				K.forEach(function(k,i){ document.documentElement.style.setProperty(k, lx(fp[i],tp[i],tt)); });
+			})();
+		</script>
+		%sveltekit.head%
+	</head>
+
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
