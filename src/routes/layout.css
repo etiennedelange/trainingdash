@@ -1,0 +1,374 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+	--font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Light mode tokens ────────────────────────────────────── */
+:root {
+	--c-bg: #ffffff;
+	--c-bg-alt: #f5f5f4;
+	--c-bg-card: #ffffff;
+	--c-ink: #0a0a0a;
+	--c-muted: #6b7280;
+	--c-border-soft: #e5e7eb;
+	--c-accent: #f5d90a;
+	--c-shadow: #0a0a0a;
+
+	/* Contact section (dark bg in light mode) */
+	--c-contact-bg: #0a0a0a;
+	--c-contact-text: #ffffff;
+	--c-contact-muted: #9ca3af;
+	--c-contact-border: #374151;
+	--c-contact-hover: #f5d90a;
+	--c-contact-cta-bg: #f5d90a;
+	--c-contact-cta-text: #0a0a0a;
+	--c-contact-cta-border: #0a0a0a;
+	--c-contact-aside: #6b7280;
+}
+
+/* ── Dark mode tokens — warm brown + cream ────────────────── */
+html.dark {
+	--c-bg: #1c160e;
+	--c-bg-alt: #241b11;
+	--c-bg-card: #2a1e12;
+	--c-ink: #f0e8d8;
+	--c-muted: #a89178;
+	--c-border-soft: #3d2d1a;
+	--c-accent: #f5d90a;
+	--c-shadow: #f0e8d8; /* cream hard shadows */
+
+	/* Contact section flips to accent yellow in dark mode */
+	--c-contact-bg: #f5d90a;
+	--c-contact-text: #1a1209;
+	--c-contact-muted: #5a4a1a;
+	--c-contact-border: #c8b308;
+	--c-contact-hover: #1a1209;
+	--c-contact-cta-bg: #1a1209;
+	--c-contact-cta-text: #f5d90a;
+	--c-contact-cta-border: #1a1209;
+	--c-contact-aside: #5a4a1a;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	font-family: var(--font-sans);
+	background-color: var(--c-bg);
+	color: var(--c-ink);
+	transition:
+		background-color 0.6s ease,
+		color 0.6s ease;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+	background-color: var(--c-accent);
+	color: #0a0a0a;
+}
+
+/* ── Neobrutalism utilities ───────────────────────────────── */
+.neo-card {
+	border: 2px solid var(--c-ink);
+	box-shadow: 4px 4px 0 var(--c-shadow);
+	background-color: var(--c-bg-card);
+	transition:
+		box-shadow 0.15s ease,
+		transform 0.15s ease,
+		border-color 0.25s ease,
+		background-color 0.25s ease;
+}
+
+.neo-card:hover {
+	box-shadow: 6px 6px 0 var(--c-shadow);
+	transform: translate(-1px, -1px);
+}
+
+.neo-tag {
+	border: 1.5px solid var(--c-ink);
+	background-color: var(--c-accent);
+	color: #0a0a0a;
+	font-size: 0.75rem;
+	font-weight: 600;
+	padding: 2px 10px;
+	display: inline-block;
+	white-space: nowrap;
+	transition: border-color 0.25s ease;
+}
+
+.neo-btn {
+	border: 2px solid var(--c-ink);
+	box-shadow: 3px 3px 0 var(--c-shadow);
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		box-shadow 0.15s ease,
+		transform 0.15s ease,
+		border-color 0.25s ease;
+}
+
+.neo-btn:hover {
+	box-shadow: 5px 5px 0 var(--c-shadow);
+	transform: translate(-1px, -1px);
+}
+
+.neo-btn:active {
+	box-shadow: 1px 1px 0 var(--c-shadow);
+	transform: translate(1px, 1px);
+}
+
+/* ── Dark mode toggle ─────────────────────────────────────── */
+.dm-toggle {
+	border: 2px solid var(--c-ink);
+	box-shadow: 2px 2px 0 var(--c-shadow);
+	cursor: pointer;
+	padding: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	color: var(--c-ink);
+	transition:
+		border-color 0.25s ease,
+		box-shadow 0.15s ease,
+		transform 0.15s ease,
+		color 0.25s ease;
+}
+
+.dm-toggle:hover {
+	box-shadow: 4px 4px 0 var(--c-shadow);
+	transform: translate(-1px, -1px);
+}
+
+.dm-toggle:active {
+	box-shadow: 1px 1px 0 var(--c-shadow);
+	transform: translate(1px, 1px);
+}
+
+.theme-icon {
+	position: relative;
+	width: 18px;
+	height: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.icon-sun,
+.icon-moon {
+	position: absolute;
+	transition:
+		transform 0.35s ease,
+		opacity 0.25s ease;
+}
+
+/* Light mode: sun visible */
+.icon-sun {
+	opacity: 1;
+	transform: rotate(0deg) scale(1);
+}
+.icon-moon {
+	opacity: 0;
+	transform: rotate(90deg) scale(0.4);
+}
+
+/* Dark mode: moon visible */
+.is-dark .icon-sun,
+html.dark .dm-toggle .icon-sun {
+	opacity: 0;
+	transform: rotate(-90deg) scale(0.4);
+}
+.is-dark .icon-moon,
+html.dark .dm-toggle .icon-moon {
+	opacity: 1;
+	transform: rotate(0deg) scale(1);
+}
+
+/* ── Contact section (inverts in dark mode) ───────────────── */
+.contact-section {
+	background-color: var(--c-contact-bg);
+	color: var(--c-contact-text);
+	transition:
+		background-color 0.25s ease,
+		color 0.25s ease;
+}
+
+.contact-muted {
+	color: var(--c-contact-muted);
+	transition: color 0.25s ease;
+}
+
+.contact-aside {
+	color: var(--c-contact-aside);
+	transition: color 0.25s ease;
+}
+
+.contact-card {
+	border: 2px solid var(--c-contact-border);
+	transition: border-color 0.15s ease;
+}
+
+.contact-card:hover {
+	border-color: var(--c-contact-hover);
+}
+
+.contact-link {
+	color: var(--c-contact-text);
+	transition: color 0.15s ease;
+}
+
+.contact-link:hover {
+	color: var(--c-contact-hover);
+}
+
+.contact-cta {
+	background-color: var(--c-contact-cta-bg);
+	color: var(--c-contact-cta-text);
+	border: 2px solid var(--c-contact-cta-border);
+	box-shadow: 3px 3px 0 var(--c-contact-cta-border);
+	font-weight: 700;
+	cursor: pointer;
+	display: inline-block;
+	text-decoration: none;
+	transition:
+		box-shadow 0.15s ease,
+		transform 0.15s ease,
+		background-color 0.25s ease,
+		color 0.25s ease,
+		border-color 0.25s ease;
+}
+
+.contact-cta:hover {
+	box-shadow: 5px 5px 0 var(--c-contact-cta-border);
+	transform: translate(-1px, -1px);
+}
+
+.contact-cta:active {
+	box-shadow: 1px 1px 0 var(--c-contact-cta-border);
+	transform: translate(1px, 1px);
+}
+
+/* ── Stamp animation (skill tags) ─────────────────────────── */
+@keyframes stamp-pop {
+	0%   { transform: scale(1);    box-shadow: 2px 2px 0 var(--c-shadow); }
+	35%  { transform: scale(1.18); box-shadow: 6px 6px 0 var(--c-shadow); }
+	65%  { transform: scale(0.95); box-shadow: 1px 1px 0 var(--c-shadow); }
+	100% { transform: scale(1);    box-shadow: 2px 2px 0 var(--c-shadow); }
+}
+
+.is-stamped {
+	animation: stamp-pop 0.35s ease forwards;
+}
+
+.neo-tag {
+	cursor: pointer;
+}
+
+/* ── Scroll progress bar ──────────────────────────────────── */
+.scroll-progress {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 3px;
+	background-color: var(--c-accent);
+	transition: width 0.1s linear, background-color 0.6s ease;
+	pointer-events: none;
+}
+
+/* ── Portrait interaction modes ───────────────────────────── */
+.portrait-frame {
+	cursor: pointer;
+}
+
+.portrait-mode-contrast .portrait-img {
+	filter: grayscale(1) contrast(2.2) brightness(0.9);
+}
+.portrait-mode-contrast .portrait-grain {
+	opacity: 0 !important;
+}
+
+.portrait-mode-glitch .portrait-img {
+	filter: grayscale(0.3) contrast(1.6) hue-rotate(15deg) brightness(1.1);
+	animation: glitch-shift 0.18s steps(1) infinite;
+}
+.portrait-mode-glitch .portrait-grain {
+	opacity: 0.35 !important;
+	animation-duration: 0.08s !important;
+}
+
+@keyframes glitch-shift {
+	0%   { transform: translate(0,    0);   }
+	20%  { transform: translate(-3px, 1px); }
+	40%  { transform: translate(2px, -2px); }
+	60%  { transform: translate(-1px, 3px); }
+	80%  { transform: translate(3px, -1px); }
+	100% { transform: translate(0,    0);   }
+}
+
+.portrait-mode-scanlines .portrait-img {
+	filter: grayscale(1) contrast(1.1) brightness(0.95);
+	mix-blend-mode: normal;
+}
+.portrait-mode-scanlines .portrait-grain {
+	opacity: 0 !important;
+}
+.portrait-mode-scanlines .portrait-lines {
+	background: repeating-linear-gradient(
+		0deg,
+		transparent,
+		transparent 1px,
+		rgba(0, 0, 0, 0.25) 1px,
+		rgba(0, 0, 0, 0.25) 2px
+	);
+}
+
+/* ── Footer secret ────────────────────────────────────────── */
+.footer-secret {
+	text-align: center;
+	font-size: 0.75rem;
+	font-style: italic;
+	padding: 0.75rem 1rem 1.5rem;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.8s ease;
+	color: var(--c-muted);
+}
+
+.footer-secret.is-visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* ── Logo easter egg tooltip ──────────────────────────────── */
+.logo-wrap {
+	position: relative;
+	display: inline-block;
+}
+
+.logo-tooltip {
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 0;
+	white-space: nowrap;
+	font-size: 0.7rem;
+	font-weight: 600;
+	padding: 4px 10px;
+	background-color: var(--c-bg);
+	border: 2px solid var(--c-ink);
+	box-shadow: 3px 3px 0 var(--c-shadow);
+	color: var(--c-ink);
+	z-index: 100;
+	pointer-events: none;
+	transition: border-color 0.25s ease, background-color 0.25s ease;
+}

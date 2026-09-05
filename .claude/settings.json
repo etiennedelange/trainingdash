@@ -1,0 +1,102 @@
+{
+	"extraKnownMarketplaces": {
+		"claude-plugins-official": {
+			"source": {
+				"source": "github",
+				"repo": "anthropics/claude-plugins-official"
+			}
+		}
+	},
+
+	"enabledPlugins": {
+		"superpowers@claude-plugins-official": true,
+		"frontend-design@claude-plugins-official": true,
+		"vercel@claude-plugins-official": true,
+		"context7@claude-plugins-official": true,
+		"feature-dev@claude-plugins-official": true,
+		"code-simplifier@claude-plugins-official": true,
+		"typescript-lsp@claude-plugins-official": true,
+		"semgrep@claude-plugins-official": true,
+		"security-guidance@claude-plugins-official": true,
+		"ralph-loop@claude-plugins-official": true,
+		"chrome-devtools-mcp@claude-plugins-official": true
+	},
+	"permissions": {
+		"allow": [
+			"Bash(pnpm install*)",
+			"Bash(pnpm add*)",
+			"Bash(pnpm remove*)",
+			"Bash(pnpm run*)",
+			"Bash(pnpm exec*)",
+			"Bash(pnpm dlx*)",
+			"Bash(pnpm audit*)",
+			"Bash(pnpm approve-builds*)",
+			"Bash(pnpm lint*)",
+			"Bash(pnpm typecheck*)",
+			"Bash(pnpm test*)",
+			"Bash(pnpm build*)",
+			"Bash(pnpm dev*)",
+			"Bash(pnpm format*)",
+
+			"Bash(git status*)",
+			"Bash(git diff*)",
+			"Bash(git log*)",
+			"Bash(git add*)",
+			"Bash(git commit*)",
+			"Bash(git checkout*)",
+			"Bash(git branch*)",
+			"Bash(git push*)",
+			"Bash(git pull*)",
+			"Bash(git fetch*)",
+			"Bash(git stash*)",
+			"Bash(git merge*)",
+			"Bash(git rebase*)",
+
+			"Read(**)",
+			"Write(src/**)",
+			"Write(tests/**)",
+			"Write(public/**)",
+			"Write(supabase/migrations/**)",
+			"Write(.env.example)",
+			"Write(CLAUDE.md)",
+			"Write(next.config.ts)",
+			"Write(tailwind.config.ts)",
+			"Write(tsconfig.json)",
+			"Write(components.json)",
+			"Write(playwright.config.ts)",
+			"Write(jest.config.ts)",
+			"Write(jest.setup.ts)",
+			"Write(prettier.config.js)",
+			"Write(pnpm-workspace.yaml)",
+
+			"Bash(supabase start*)",
+			"Bash(supabase stop*)",
+			"Bash(supabase status*)",
+			"Bash(supabase reset*)",
+			"Bash(supabase db*)",
+			"Bash(supabase migration*)",
+			"Bash(supabase gen types*)",
+			"Bash(supabase functions*)",
+
+			"Bash(vercel env pull*)",
+			"Bash(vercel ls*)",
+			"Bash(vercel inspect*)",
+			"Bash(vercel logs*)",
+
+			"Bash(pnpm dlx shadcn*)",
+
+			"Bash(pnpm exec playwright*)"
+		],
+		"deny": [
+			"Write(.env.local)",
+			"Write(.env.production)",
+			"Write(.env.*.local)",
+
+			"Bash(git push * main)",
+			"Bash(git push * master)",
+			"Bash(git push --force *)",
+
+			"Bash(pnpm add -g *)"
+		]
+	}
+}
