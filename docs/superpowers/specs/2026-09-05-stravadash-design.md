@@ -151,22 +151,42 @@ Two Strava constraints shape this and are the reason for the shape:
 
 - The callback must return 200 within two seconds, so the handler acknowledges
   before doing any work.
-- The event payload contains no activity data — only `object_id`,
-  `object_type`, `aspect_type`, `owner_id` — so the activity must be fetched.
+- The event payload contains no activity data. The documented fields are
+  `object_type`, `object_id`, `aspect_type`, `updates`, `owner_id`,
+  `subscription_id` and `event_time` — ids and a change hash, nothing else —
+  so the activity must be fetched separately.
 
 `aspect_type` maps to: `create`/`update` → fetch and upsert; `delete` → delete
 the row. Events whose `owner_id` is not the allowed athlete are acknowledged
 and dropped.
 
-Subscription validation is a separate `GET /webhook` returning `hub.challenge`
-when `hub.verify_token` matches `STRAVA_VERIFY_TOKEN`.
+Subscription validation is a separate `GET /webhook?hub.mode=subscribe&
+hub.verify_token=…&hub.challenge=…`. When `hub.verify_token` matches
+`STRAVA_VERIFY_TOKEN`, respond 200 within two seconds with the challenge
+echoed **as JSON**: `{"hub.challenge": "<value>"}`. Strava's own
+troubleshooting names a slow or malformed response here as the most common
+cause of subscription creation failing, so this path is covered by a Worker
+test rather than discovered by hand.
 
 ### 4.4 Live push
 
-A single Durable Object instance, named `live`. `GET /live` upgrades and hands
-the socket to the DO, which accepts it with WebSocket Hibernation so idle
-connections cost no duration billing. `/broadcast` fans a message out to every
-held socket.
+A single Durable Object instance, reached with `env.LIVE.getByName("live")`.
+`GET /live` upgrades and hands the socket to the DO, which calls
+`this.ctx.acceptWebSocket(server)` rather than `ws.accept()`. That is what
+makes the connection hibernatable: the object can be evicted from memory while
+the socket stays open, and the runtime reconstructs it to deliver a message.
+Messages arrive at `webSocketMessage`, closes at `webSocketClose`; connected
+sockets are enumerated with `this.ctx.getWebSockets()`, which is how
+`/broadcast` fans out.
+
+Keepalives use `this.ctx.setWebSocketAutoResponse(new
+WebSocketRequestResponsePair("ping", "pong"))`, so heartbeat traffic is
+answered by the runtime **without waking the object** — a client can hold the
+socket open indefinitely at no duration cost.
+
+Set `compatibility_date` to at least `2026-04-07` to get
+`web_socket_auto_reply_to_close`, under which the runtime replies to Close
+frames itself.
 
 **The socket is an optimisation, not the source of truth.** The client refetches
 on reconnect and on `visibilitychange`, so a dropped socket, a missed event or
@@ -326,7 +346,24 @@ unrecoverable.** Every one either self-heals on the next refetch or surfaces in
 
 ## 10. Configuration
 
-`wrangler.jsonc` bindings: `DB` (D1), `LIVE` (Durable Object), `ASSETS`, plus
+Static assets are served by the Worker itself:
+
+```jsonc
+"assets": {
+  "directory": "./dist",
+  "binding": "ASSETS",
+  "not_found_handling": "single-page-application",
+  "run_worker_first": ["/*", "!/assets/*"]
+}
+```
+
+`not_found_handling` returns `index.html` for client-side routes, which
+TanStack Router needs. `run_worker_first` sends everything through the Worker
+except Vite's hashed `/assets/*` bundles, which are served directly — so
+`/api`, `/auth`, `/webhook` and `/live` reach Hono while static files skip it.
+A Worker may configure only one asset collection.
+
+Bindings: `DB` (D1), `LIVE` (Durable Object), `ASSETS`, plus
 vars `APP_URL` and `ALLOWED_ATHLETE_ID`. A cron trigger (hourly) drives the
 `scheduled` handler that resumes an incomplete backfill after a rate-limit
 stop; it is a no-op once `sync_state.backfill` is marked complete.
@@ -350,7 +387,28 @@ subscription per application, so `scripts/webhook.ts` provides
   dropped.
 - `pnpm-workspace.yaml` already allowlists the `workerd` build script.
 
-## 12. Deferred
+## 12. Verification status
+
+Checked against current vendor documentation on 2026-09-05:
+
+- **Verified.** Strava's two-second response deadline (both the POST callback
+  and the GET validation), the event payload field list, one active
+  subscription per application, the JSON `hub.challenge` echo. Cloudflare's
+  `assets` binding with `not_found_handling` and `run_worker_first`, the
+  Durable Object Hibernation API (`acceptWebSocket`, `webSocketMessage`,
+  `getWebSockets`, `setWebSocketAutoResponse`), and that hibernation avoids
+  billing for idle connections. Supabase's `EdgeRuntime.waitUntil` — checked
+  while comparing platforms, now moot.
+- **Not verified, confirm before relying on it.** Workers and D1 free-tier
+  quotas. Whether `echarts-for-react` currently supports React 19 — the spec
+  avoids it regardless, so this only matters if you would rather not
+  hand-roll the hook. That MapLibre needs a third-party tile source, and that
+  OpenFreeMap and Protomaps are usable without an account. That iOS requires
+  home-screen installation before Web Push works. Strava's current rate-limit
+  figures, which depend on your application's tier and are deliberately absent
+  from this document — read them off <https://www.strava.com/settings/api>.
+
+## 13. Deferred
 
 The gamification layer — streaks, levels, badges, goals — and the visual
 identity, including the design direction in the referenced artifact. These get
