@@ -1,35 +1,33 @@
 {
-	"name": "SvelteKit Portfolio",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
-	"features": {
-		"ghcr.io/devcontainers-extra/features/pnpm:2": {},
-		"ghcr.io/devcontainers/features/github-cli:1": {}
-	},
-	"forwardPorts": [5173],
-	"portsAttributes": {
-		"5173": {
-			"label": "SvelteKit Dev Server",
-			"onAutoForward": "openBrowser"
-		}
-	},
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"svelte.svelte-vscode",
-				"esbenp.prettier-vscode",
-				"dbaeumer.vscode-eslint",
-				"bradlc.vscode-tailwindcss",
-				"ms-vscode-remote.remote-containers"
-			],
-			"settings": {
-				"editor.formatOnSave": true,
-				"editor.defaultFormatter": "esbenp.prettier-vscode",
-				"[svelte]": {
-					"editor.defaultFormatter": "svelte.svelte-vscode"
-				}
-			}
-		}
-	},
-	"postCreateCommand": "bash .devcontainer/post-create.sh",
-	"remoteUser": "node"
+  "name": "stravadash-container",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/pnpm:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-vscode-remote.remote-containers",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "node",
+  "forwardPorts": [
+    5173
+  ],
+  "portsAttributes": {
+    "5173": {
+      "label": "stravadash dev (SPA + Worker)",
+      "onAutoForward": "notify"
+    }
+  }
 }

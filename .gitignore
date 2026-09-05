@@ -3,12 +3,6 @@ node_modules/
 .pnpm-store/
 .pnpm-debug.log*
 
-# Next.js
-.next/
-out/
-build/
-next-env.d.ts
-
 # Production / build output
 dist/
 
@@ -83,6 +77,9 @@ storybook-static
 *.png
 *.jpg
 *.jpeg
-!static/**
+!public/**
 
 .claude/worktrees/
+# Cloudflare local secrets
+.dev.vars
+.wrangler/
