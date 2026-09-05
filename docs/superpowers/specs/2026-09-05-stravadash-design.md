@@ -11,7 +11,8 @@ appears on the dashboard about a second later, with no polling and no refresh.
 
 **In scope:** Strava OAuth, full history backfill, webhook ingest, live push to
 open tabs, an aggregate dashboard, route maps, installable PWA, optional push
-notification on activity arrival.
+notification on activity arrival, and a Coach chat answering questions about
+recent training.
 
 **Out of scope, deliberately:**
 
@@ -20,6 +21,10 @@ notification on activity arrival.
 - **Gamification and visual identity.** Streaks, levels, badges, goals and the
   design language get their own brainstorm once this pipeline is proven. This
   spec builds the data and one plain dashboard screen to hang them on.
+- **Strength training and muscle-group tagging.** The design artifact has a
+  Strength screen with user-entered muscle-group tags. Strava has no such data,
+  so it would need a writable table and write endpoints. Cut for now — the
+  Worker stays read-only apart from push subscriptions.
 
 ## 2. Stack
 
@@ -34,6 +39,7 @@ notification on activity arrival.
 | Maps | MapLibre GL |
 | App feel | `vite-plugin-pwa` — installable, offline shell |
 | Notifications | Web Push (VAPID) |
+| Coach | Anthropic API (`@anthropic-ai/sdk`, `claude-opus-5`), streamed |
 | Server | Cloudflare Worker (Hono) — serves SPA, API and webhook |
 | Database | Cloudflare D1 |
 | Live transport | Durable Object with WebSocket Hibernation |
@@ -95,6 +101,8 @@ Modules, each independently testable:
 | `worker/sync/backfill.ts` | Resumable history import | client, D1 |
 | `worker/sync/ingest.ts` | One webhook event → one row change | client, D1, DO |
 | `worker/live/room.ts` | Durable Object; connections and broadcast | — |
+| `worker/coach/digest.ts` | Builds the training digest sent to Claude | D1, aggregate |
+| `worker/coach/chat.ts` | Anthropic streaming call | Anthropic SDK |
 | `shared/aggregate.ts` | Pure functions: rows in, dashboard stats out | nothing |
 | `shared/types.ts` | Types crossing the Worker/client boundary | — |
 
@@ -202,6 +210,58 @@ it must never affect the D1 write or the broadcast. On iOS, push requires the
 PWA to have been installed to the home screen; the UI states this rather than
 silently failing.
 
+### 4.6 Coach
+
+`POST /api/coach` takes the conversation so far and streams back a reply.
+
+```
+Client ──{messages}──▶ Worker /api/coach
+                          │  session cookie required
+                          ├─ read last 30 days from D1
+                          ├─ shared/aggregate.ts → training digest
+                          └─ Anthropic Messages API (streaming)
+Client ◀──── SSE ─────────┘
+```
+
+**The digest is built server-side, never sent by the client.** The request body
+carries only the conversation turns; the Worker reads D1 itself and composes
+the digest. A client-supplied digest would let the page assert whatever
+training history it liked, and would make the endpoint a general-purpose relay
+to a paid API.
+
+Request shape:
+
+- `model: "claude-opus-5"`.
+- `thinking: { type: "adaptive" }`. `budget_tokens` is **removed** on Opus 5
+  and returns a 400 — it must not appear in the code.
+- `output_config: { effort: "medium" }`. Chat is not a workload that repays
+  high effort; this is the first cost lever to turn down if the bill matters.
+- **Streaming**, so a long answer cannot hit an HTTP timeout and the UI can
+  render tokens as they arrive.
+- `max_tokens: 16000`. Answers are conversational and deliberately short; this
+  is a ceiling, not a target.
+- No assistant prefill — it returns a 400 on Opus 5. Response shape is steered
+  by the system prompt.
+
+**Prompt caching does real work here.** The request renders as
+`tools → system → messages`, and a cache breakpoint is a prefix match, so the
+stable coaching instructions and the training digest go in `system` with
+`cache_control: { type: "ephemeral" }`, and only the varying question sits
+after it. Every follow-up turn in a conversation then reads the digest from
+cache instead of paying for it again. The digest must therefore be
+**deterministic** — sorted keys, no `Date.now()`, no per-request ids — or the
+cache silently never hits. `usage.cache_read_input_tokens` staying at zero
+across a multi-turn conversation is the signal that something volatile crept
+into the prefix.
+
+No tool use. The digest is computed before the call, so Claude needs no
+database access, which keeps the endpoint a single request rather than an
+agent loop.
+
+**This is the project's only paid dependency and its only outbound API key.**
+`ANTHROPIC_API_KEY` is a Worker secret, the route is behind the session cookie,
+and the single-athlete gate means only you can spend it.
+
 ## 5. Data model (D1)
 
 ```sql
@@ -276,6 +336,7 @@ moved server-side unchanged, which is the reason they live in `shared/`.
 | `GET /api/me` | Athlete, connection state, backfill progress |
 | `GET /api/activities` | Every activity as a slim row (no `raw`), for the client cache |
 | `GET /api/activities/:id` | One activity in full, including polyline |
+| `POST /api/coach` | Coach chat; streams the reply |
 | `POST /api/push/subscribe` | Store a push subscription |
 | `GET /live` | WebSocket upgrade |
 | `GET /webhook` | Subscription validation |
@@ -304,6 +365,13 @@ on unmount. The `echarts-for-react` wrapper is deliberately avoided: it is
 community-maintained and has historically lagged React major versions, and
 tree-shaking matters more here than the convenience.
 
+**The charts in the design artifact are not canonical.** They are bar rows and
+progress rings that happen to be easy to draw; chart form is chosen per view on
+the merits. ECharts earns its place where interaction or density justify it —
+the calendar heatmap, the multi-week distance series — and a plain SVG or CSS
+bar is the right answer for a four-row workout-mix breakdown. Neither choice is
+settled by what the comp happens to show.
+
 **MapLibre needs a tile source**, which it does not provide. OpenFreeMap or
 Protomaps, both usable without an account, are the candidates; the choice is
 made when the map is built and does not affect anything else.
@@ -323,6 +391,7 @@ invalidate the relevant TanStack Query keys on a message, and refetch on
 | WebSocket drops | Backoff reconnect; refetch on reconnect closes the gap |
 | Wrong athlete completes OAuth | Refused, nothing stored |
 | Push send fails | Logged and ignored |
+| Coach call fails or is rate-limited | Typed SDK errors caught most-specific-first; the chat shows the failure and keeps the conversation, nothing else is affected |
 
 The through-line: **no failure path is allowed to be silently
 unrecoverable.** Every one either self-heals on the next refetch or surfaces in
@@ -340,6 +409,10 @@ unrecoverable.** Every one either self-heals on the next refetch or surfaces in
   assert hibernation resumption.
 - **Backfill** — a fake Strava returning paged fixtures plus a 429, asserting
   the run resumes from the saved point rather than restarting.
+- **Coach** — `worker/coach/digest.ts` is a pure function and unit-tested on
+  fixtures, including a **determinism test**: the same rows must produce a
+  byte-identical digest, since prompt caching depends on it. The Anthropic call
+  is stubbed; no test spends money.
 - **Playwright** — connect flow against a stubbed Strava, dashboard render,
   and a live-update test that posts a webhook event and asserts the DOM
   updates without a reload.
@@ -369,7 +442,7 @@ vars `APP_URL` and `ALLOWED_ATHLETE_ID`. A cron trigger (hourly) drives the
 stop; it is a no-op once `sync_state.backfill` is marked complete.
 
 Secrets: `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_VERIFY_TOKEN`,
-`SESSION_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`. Locally these live
+`SESSION_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `ANTHROPIC_API_KEY`. Locally these live
 in `.dev.vars`, which is gitignored and already present.
 
 Development webhooks need a public HTTPS URL, so `cloudflared tunnel --url
@@ -407,10 +480,16 @@ Checked against current vendor documentation on 2026-09-05:
   home-screen installation before Web Push works. Strava's current rate-limit
   figures, which depend on your application's tier and are deliberately absent
   from this document — read them off <https://www.strava.com/settings/api>.
+- **Coach request shape** taken from the bundled `claude-api` reference rather
+  than recalled: `claude-opus-5`, adaptive thinking, `output_config.effort`,
+  no `budget_tokens`, no prefill. Confirm current pricing before assuming a
+  monthly cost.
 
 ## 13. Deferred
 
-The gamification layer — streaks, levels, badges, goals — and the visual
-identity, including the design direction in the referenced artifact. These get
+The gamification layer — streaks, levels, badges, goals — the Strength screen
+and its muscle-group tagging (which needs the writable table cut from §1), and
+the visual identity, including the design direction in the referenced
+artifact. These get
 their own brainstorm against `shared/aggregate.ts` once activities are flowing.
 The dashboard built here is a placeholder, not the design language.
