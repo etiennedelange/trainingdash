@@ -1,5 +1,5 @@
 {
-  "name": "stravadash",
+  "name": "trainingdash",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -9,8 +9,8 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "db:migrate:local": "wrangler d1 migrations apply stravadash --local",
-    "db:migrate:remote": "wrangler d1 migrations apply stravadash --remote",
+    "db:migrate:local": "wrangler d1 migrations apply trainingdash --local",
+    "db:migrate:remote": "wrangler d1 migrations apply trainingdash --remote",
     "deploy": "pnpm build && wrangler deploy",
     "webhook": "node --experimental-strip-types scripts/webhook.ts"
   },
@@ -22,6 +22,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.54.4",
     "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@cloudflare/workers-types": "^5.20260904.1",
     "@types/node": "^26.4.1",

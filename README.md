@@ -1,4 +1,4 @@
-# Stravadash
+# Trainingdash
 
 A gamified dashboard for your Strava activities, with live updates — an upload
 appears on the dashboard about a second later, with no polling and no refresh.
@@ -57,7 +57,7 @@ cp .dev.vars.example .dev.vars
 
 ```bash
 pnpm install
-pnpm exec wrangler d1 create stravadash   # copy the id into wrangler.jsonc
+pnpm exec wrangler d1 create trainingdash   # copy the id into wrangler.jsonc
 pnpm db:migrate:local
 ```
 
