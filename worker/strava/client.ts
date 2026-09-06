@@ -36,7 +36,9 @@ export function parseRateLimit(headers: Headers): RateLimit | null {
   const [shortUsage, dailyUsage] = [u[0], u[1]];
   if (
     shortLimit === undefined || dailyLimit === undefined ||
-    shortUsage === undefined || dailyUsage === undefined
+    shortUsage === undefined || dailyUsage === undefined ||
+    !Number.isFinite(shortLimit) || !Number.isFinite(dailyLimit) ||
+    !Number.isFinite(shortUsage) || !Number.isFinite(dailyUsage)
   ) return null;
   return { shortUsage, shortLimit, dailyUsage, dailyLimit };
 }
