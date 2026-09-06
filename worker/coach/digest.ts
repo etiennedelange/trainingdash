@@ -13,8 +13,9 @@ function addDays(date: string, delta: number): string {
 const km = (metres: number) => (metres / 1000).toFixed(1);
 
 function hhmm(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.round((seconds % 3600) / 60);
+  const totalMin = Math.round(seconds / 60);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
   return `${h}h ${String(m).padStart(2, "0")}m`;
 }
 
@@ -60,7 +61,7 @@ export function buildDigest(rows: ActivitySummary[], today: string): string {
   lines.push("");
 
   lines.push("## Weekly distance");
-  for (const w of weeklyBuckets(recent, 5, today)) {
+  for (const w of weeklyBuckets(rows, 5, today)) {
     lines.push(`- Week of ${w.weekStart}: ${km(w.distance)} km over ${w.count} activities`);
   }
   lines.push("");

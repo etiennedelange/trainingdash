@@ -51,4 +51,19 @@ describe("buildDigest", () => {
     expect(digest).toContain("No activities");
     expect(digest).toBe(buildDigest([], "2026-09-06"));
   });
+
+  it("includes activities in weekly buckets even if outside 30-day window", () => {
+    // For today="2026-09-06", the 30-day window starts at 2026-08-08
+    // But the 5-week window extends back to 2026-08-03
+    // An activity on 2026-08-07 should appear in weekly totals but not in Activities/Totals sections
+    const withOldWeekly = [
+      ...rows,
+      a("2026-08-07", { id: 10, name: "Old Weekly Activity", distance: 10000 }),
+    ];
+    const digest = buildDigest(withOldWeekly, "2026-09-06");
+    // Should not appear in Activities section (outside 30 days)
+    expect(digest).not.toContain("Old Weekly Activity");
+    // But should appear in Weekly distance section (within 5-week window)
+    expect(digest).toContain("2026-08-03");
+  });
 });
