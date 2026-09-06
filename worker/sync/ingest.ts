@@ -4,6 +4,7 @@ import { toRow } from "../strava/map";
 import { upsertActivity, deleteActivity } from "../db/activities";
 import { getAthlete } from "../db/athlete";
 import { broadcast } from "../live/room";
+import { notifyActivity } from "../push/send";
 
 export interface StravaWebhookEvent {
   object_type: "activity" | "athlete";
@@ -38,4 +39,5 @@ export async function handleEvent(env: Env, event: StravaWebhookEvent): Promise<
   const row = toRow(await client.getActivity(event.object_id));
   await upsertActivity(env.DB, row);
   await broadcast(env, { type: "activity.upsert", activity: row });
+  await notifyActivity(env, row).catch((err) => console.error("notify failed", err));
 }

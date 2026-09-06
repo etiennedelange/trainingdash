@@ -51,6 +51,7 @@ describe("/api/me", () => {
       athleteId: 42,
       connected: true,
       backfill: { page: 1, complete: false, last_error: null },
+      vapidPublicKey: expect.any(String),
     });
   });
 });

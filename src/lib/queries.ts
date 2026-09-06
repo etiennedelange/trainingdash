@@ -6,6 +6,7 @@ export interface Me {
   athleteId: number;
   connected: boolean;
   backfill: BackfillState;
+  vapidPublicKey: string;
 }
 
 export const queryKeys = {

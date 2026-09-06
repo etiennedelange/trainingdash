@@ -11,6 +11,9 @@ importers:
 
   .:
     dependencies:
+      '@block65/webcrypto-web-push':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)
@@ -614,6 +617,10 @@ packages:
 
   '@blazediff/core@1.9.1':
     resolution: {integrity: sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA==}
+
+  '@block65/webcrypto-web-push@2.0.0':
+    resolution: {integrity: sha512-BMrw8hABq5krABWPy3zFJvBC73HeRkyT/GTZ2AD7wqzo9hd9vO56MstBqjGMIxIw3e4lbRUbYxgihCcfhoTI2g==}
+    engines: {node: '>=22.0.0'}
 
   '@cloudflare/kv-asset-handler@0.5.0':
     resolution: {integrity: sha512-jxQYkj8dSIzc0cD6cMMNdOc1UVjqSqu8BZdor5s8cGjW2I8BjODt/kWPVdY+u9zj3ms75Q5qaZgnxUad83+eAg==}
@@ -2905,6 +2912,10 @@ packages:
     engines: {node: '>=16.20.0'}
     hasBin: true
 
+  uint8array-extras@1.5.0:
+    resolution: {integrity: sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A==}
+    engines: {node: '>=18'}
+
   unbox-primitive@1.1.0:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
@@ -3884,6 +3895,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.29.7
 
   '@blazediff/core@1.9.1': {}
+
+  '@block65/webcrypto-web-push@2.0.0':
+    dependencies:
+      uint8array-extras: 1.5.0
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
@@ -5990,6 +6005,8 @@ snapshots:
       '@typescript/typescript-sunos-x64': 7.0.2
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
+
+  uint8array-extras@1.5.0: {}
 
   unbox-primitive@1.1.0:
     dependencies:

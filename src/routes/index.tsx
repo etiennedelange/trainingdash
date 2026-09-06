@@ -1,14 +1,16 @@
 import { createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Route as rootRoute } from "./__root";
-import { activitiesQuery } from "@/lib/queries";
+import { activitiesQuery, meQuery } from "@/lib/queries";
 import { computeStreak, totalsBetween } from "#shared/aggregate";
 import { StatTile } from "@/components/StatTile";
 import { ActivityRow } from "@/components/ActivityRow";
+import { EnableNotifications } from "@/components/EnableNotifications";
 import { formatDistance, formatDuration, todayLocalDate } from "@/lib/format";
 
 export function Today({ today }: { today: string }) {
   const { data, isPending, isError } = useQuery(activitiesQuery);
+  const { data: me } = useQuery(meQuery);
 
   if (isPending) return <p className="p-10 text-muted">Loading…</p>;
   if (isError) return <p className="p-10 text-muted">Could not load activities.</p>;
@@ -41,6 +43,12 @@ export function Today({ today }: { today: string }) {
               <ActivityRow key={a.id} activity={a} />
             ))}
           </div>
+
+          {me?.vapidPublicKey ? (
+            <div className="mt-10">
+              <EnableNotifications vapidPublicKey={me.vapidPublicKey} />
+            </div>
+          ) : null}
         </>
       )}
     </div>
