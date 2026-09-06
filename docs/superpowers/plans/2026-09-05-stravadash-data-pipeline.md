@@ -2169,12 +2169,19 @@ git commit -m "feat: add the Strava webhook with ack-then-ingest"
 - Produces:
   - `requireSession` — Hono middleware setting `athleteId` on the context
   - `ActivitySummary` — `ActivityRow` without `raw` and `polyline`
+  - `ActivityDetail` — `ActivityRow` without `raw`
   - A Hono sub-app default-exported from `worker/routes/api.ts`, mounted at `/api`
 
 - [ ] **Step 1: Add `ActivitySummary` to `shared/types.ts`**
 
 ```ts
+/** The list payload: small enough that the whole history ships at once. */
 export type ActivitySummary = Omit<ActivityRow, "raw" | "polyline">;
+
+/** One activity in full. `raw` is server-only — the spec says it never
+ *  reaches the client, and it is kept solely so a new dashboard field never
+ *  requires a re-backfill. */
+export type ActivityDetail = Omit<ActivityRow, "raw">;
 ```
 
 - [ ] **Step 2: Write the failing test**
@@ -2252,13 +2259,15 @@ describe("/api/activities", () => {
     expect(body[0]?.name).toBe("Evening Run");
   });
 
-  it("returns one activity in full, including the polyline", async () => {
+  it("returns one activity with the polyline but never raw", async () => {
     await upsertActivity(env.DB, row);
     const res = await SELF.fetch("http://example.com/api/activities/7", {
       headers: { Cookie: await cookie() },
     });
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.polyline).toBe("poly");
+    // The spec is explicit: raw is server-only.
+    expect(body).not.toHaveProperty("raw");
   });
 
   it("404s an unknown activity", async () => {
@@ -2323,7 +2332,7 @@ export const requireSession = createMiddleware<{
 ```ts
 import { Hono } from "hono";
 import type { Env } from "../env";
-import type { ActivitySummary } from "#shared/types";
+import type { ActivitySummary, ActivityDetail } from "#shared/types";
 import { requireSession } from "../middleware/require-session";
 import { getAthlete } from "../db/athlete";
 import { listActivities, getActivity } from "../db/activities";
@@ -2353,7 +2362,8 @@ api.get("/activities/:id", async (c) => {
   if (!Number.isInteger(id)) return c.json({ error: "bad id" }, 400);
   const row = await getActivity(c.env.DB, id);
   if (!row) return c.json({ error: "not found" }, 404);
-  return c.json(row);
+  const { raw: _raw, ...detail } = row;
+  return c.json(detail satisfies ActivityDetail);
 });
 
 export default api;

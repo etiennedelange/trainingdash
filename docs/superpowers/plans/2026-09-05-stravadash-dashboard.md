@@ -666,7 +666,7 @@ Query keys live in one place so `useLiveUpdates` invalidates exactly what the sc
 
 ```ts
 import { queryOptions } from "@tanstack/react-query";
-import type { ActivitySummary, ActivityRow, BackfillState } from "#shared/types";
+import type { ActivitySummary, ActivityDetail, BackfillState } from "#shared/types";
 import { apiGet } from "./api";
 
 export interface Me {
@@ -696,7 +696,7 @@ export const activitiesQuery = queryOptions({
 export const activityQuery = (id: number) =>
   queryOptions({
     queryKey: queryKeys.activity(id),
-    queryFn: () => apiGet<ActivityRow>(`/api/activities/${id}`),
+    queryFn: () => apiGet<ActivityDetail>(`/api/activities/${id}`),
   });
 ```
 
@@ -1875,7 +1875,7 @@ git commit -m "feat: add the Progress screen"
 - Test: `src/map/polyline.test.ts`
 
 **Interfaces:**
-- Consumes: `activityQuery`, `ActivityRow`.
+- Consumes: `activityQuery`, `ActivityDetail`.
 - Produces:
   - `decodePolyline(encoded: string): [number, number][]` — `[lng, lat]` pairs, GeoJSON order
   - `bounds(coords): [[number, number], [number, number]]`
