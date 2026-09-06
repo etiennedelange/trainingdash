@@ -1,11 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { Map as MapLibreMap } from "maplibre-gl";
+import { Map as MapLibreMap, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { decodePolyline, bounds } from "./polyline";
 
 // Tile source confirmed live 2026-09-06 (200, dark background style, no account
 // needed). MapLibre ships no tiles of its own.
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+
+// maplibre-gl computes its Web Worker's filename dynamically at runtime
+// (`moduleUrl.endsWith("-dev.mjs") ? ... : "maplibre-gl-worker.mjs"`), which
+// Vite can't statically analyze into a bundled asset — the file is never
+// emitted to dist/, so the worker request 404s. Our own SPA catch-all route
+// then serves index.html for that 404 (a non-JS MIME type), the worker never
+// starts, and the map never renders a single tile (though the style JSON
+// still loads on the main thread, so e.g. attribution shows regardless).
+// public/maplibre-gl-worker.mjs is a manual copy of maplibre-gl's own
+// dist/maplibre-gl-worker.mjs, which itself has a relative import —
+// `from "./maplibre-gl-shared.mjs"` — so that file is copied alongside it
+// in public/ too. Re-copy both if maplibre-gl is upgraded.
+setWorkerUrl("/maplibre-gl-worker.mjs");
 
 export function RouteMap({ polyline }: { polyline: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
