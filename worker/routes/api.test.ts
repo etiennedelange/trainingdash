@@ -75,6 +75,7 @@ describe("/api/activities", () => {
     });
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.polyline).toBe("poly");
+    expect(body).not.toHaveProperty("raw");
   });
 
   it("404s an unknown activity", async () => {
