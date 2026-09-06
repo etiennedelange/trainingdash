@@ -6,6 +6,7 @@ import { getAthlete } from "../db/athlete";
 import { listActivities, getActivity } from "../db/activities";
 import { getBackfillState } from "../db/sync";
 import { savePushSubscription } from "../db/push";
+import coach from "./coach";
 
 const api = new Hono<{ Bindings: Env; Variables: { athleteId: number } }>();
 
@@ -47,5 +48,7 @@ api.post("/push/subscribe", async (c) => {
   });
   return c.json({ ok: true });
 });
+
+api.route("/coach", coach);
 
 export default api;
