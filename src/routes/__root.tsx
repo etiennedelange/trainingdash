@@ -1,6 +1,7 @@
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { Shell } from "@/components/Shell";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
+import { AccountStatus } from "@/components/AccountStatus";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 
 function RootLayout() {
@@ -13,7 +14,7 @@ function RootLayout() {
   useLiveUpdates();
 
   return (
-    <Shell activeKey={activeKey}>
+    <Shell activeKey={activeKey} footer={<AccountStatus />}>
       <Outlet />
       <UpdatePrompt />
     </Shell>

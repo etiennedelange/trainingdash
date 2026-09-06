@@ -11,9 +11,11 @@ const NAV = [
 export function Shell({
   children,
   activeKey,
+  footer,
 }: {
   children: ReactNode;
   activeKey?: string;
+  footer?: ReactNode;
 }) {
   return (
     <div className="flex min-h-screen bg-ground">
@@ -40,6 +42,8 @@ export function Shell({
             {item.label}
           </Link>
         ))}
+
+        {footer ? <div className="mt-auto pt-4">{footer}</div> : null}
       </nav>
 
       <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
