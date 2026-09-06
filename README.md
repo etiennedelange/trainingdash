@@ -16,6 +16,7 @@ holds the WebSocket connections that push updates to open tabs.
 | Server | Cloudflare Worker (Hono), D1, Durable Object |
 | App feel | PWA (`vite-plugin-pwa`) — installable, offline shell |
 | Tests | Vitest (`@cloudflare/vitest-pool-workers`), Playwright |
+| Coach | Anthropic API (`claude-opus-5`) — the one paid dependency |
 
 ## How live updates work
 
@@ -51,6 +52,7 @@ cp .dev.vars.example .dev.vars
 # Fill in STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET.
 # STRAVA_VERIFY_TOKEN: any random string.
 # SESSION_SECRET: openssl rand -hex 32
+# ANTHROPIC_API_KEY: from https://console.anthropic.com — powers the Coach.
 ```
 
 ### 2. Database
@@ -103,6 +105,7 @@ pnpm exec wrangler secret put STRAVA_CLIENT_ID
 pnpm exec wrangler secret put STRAVA_CLIENT_SECRET
 pnpm exec wrangler secret put STRAVA_VERIFY_TOKEN
 pnpm exec wrangler secret put SESSION_SECRET
+pnpm exec wrangler secret put ANTHROPIC_API_KEY
 
 # Point APP_URL in wrangler.jsonc at the deployed origin first, and set
 # ALLOWED_ATHLETE_ID to your Strava athlete id so nobody else can connect.
@@ -134,8 +137,15 @@ scripts/    Strava webhook subscription management
 e2e/        Playwright tests
 ```
 
+## Costs
+
+Everything runs inside Cloudflare's free tier except the Coach, which calls
+the Anthropic API per question.
+
 ## Status
 
-The data pipeline is complete: OAuth, resumable backfill, webhook ingest, live
-push, and one dashboard screen. The gamification layer — streaks, levels,
-badges, goals, and the visual identity — is intentionally not built yet.
+The data pipeline, the dashboard, and the Coach chat screen are complete:
+OAuth, resumable backfill, webhook ingest, live push, one dashboard screen,
+and a Claude-backed coach that answers questions about your training. The
+gamification layer — streaks, levels, badges, goals, and the visual identity
+— is intentionally not built yet.
