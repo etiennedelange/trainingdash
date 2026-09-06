@@ -2,6 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **STATUS: IMPLEMENTED.** Every task in this plan is already built and
+> committed, up to and including commit `4eee554`, plus six hardening fixes
+> made after it (webhook verify-token auth, ASSETS binding, the
+> `ALLOWED_ATHLETE_ID` gate test, a TOCTOU fix on the single-athlete claim, a
+> loud failure on a missing `SESSION_SECRET`, and `parseRateLimit` returning
+> null on a malformed header). It is kept as the record of what was built and
+> why. **Do not re-execute it.** Start from Plan 2.
+>
+> Note also that the project was renamed **Stravadash → Trainingdash** in
+> `4eee554`; this document predates that and still says Stravadash throughout.
+
 **Goal:** Strava activities flow into D1 — by OAuth, by resumable backfill, and by webhook — and a connected browser receives each change over a WebSocket within about a second.
 
 **Architecture:** One Cloudflare Worker (Hono) serves the API and the Strava webhook. D1 stores activities. A single Durable Object holds hibernating WebSockets and broadcasts changes. The webhook acknowledges within two seconds and does all real work in `ctx.waitUntil()`.

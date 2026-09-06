@@ -1,4 +1,4 @@
-# Stravadash Dashboard Implementation Plan
+# Trainingdash Dashboard Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -141,7 +141,7 @@ import { Shell } from "./Shell";
 describe("Shell", () => {
   it("renders the brand and its children", async () => {
     render(<Shell><p>content</p></Shell>);
-    await expect.element(screen.getByText("Stravadash")).toBeInTheDocument();
+    await expect.element(screen.getByText("Trainingdash")).toBeInTheDocument();
     await expect.element(screen.getByText("content")).toBeInTheDocument();
   });
 
@@ -187,7 +187,7 @@ export function Shell({
               <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="#062b26" />
             </svg>
           </div>
-          <span className="font-display text-base font-bold">Stravadash</span>
+          <span className="font-display text-base font-bold">Trainingdash</span>
         </div>
 
         {NAV.map((item) => (
@@ -659,6 +659,21 @@ export async function apiGet<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 ```
+
+- [ ] **Step 3b: Add `ActivityDetail` to `shared/types.ts`**
+
+The shipped `GET /api/activities/:id` already strips `raw` (commit `01cad48`),
+but no type names that shape. Add one so the client is not typed as receiving a
+field the server never sends:
+
+```ts
+/** One activity in full. `raw` is server-only and never reaches the client. */
+export type ActivityDetail = Omit<ActivityRow, "raw">;
+```
+
+Then confirm `worker/routes/api.ts`'s detail handler returns that type rather
+than `ActivityRow`, and add `satisfies ActivityDetail` to its response if it
+does not already.
 
 - [ ] **Step 4: Write `src/lib/queries.ts`**
 
@@ -2159,8 +2174,8 @@ VitePWA({
   registerType: "prompt",
   includeAssets: ["favicon.svg", "icon-192.png", "icon-512.png"],
   manifest: {
-    name: "Stravadash",
-    short_name: "Stravadash",
+    name: "Trainingdash",
+    short_name: "Trainingdash",
     description: "A gamified dashboard for your Strava activities",
     theme_color: "#0b0e13",
     background_color: "#0b0f14",
@@ -2595,7 +2610,7 @@ test.describe("dashboard", () => {
   test("redirects an unauthenticated visitor toward connecting", async ({ page }) => {
     await page.goto("/");
     // With no session the API 401s; the shell must still render, not white-screen.
-    await expect(page.getByText("Stravadash")).toBeVisible();
+    await expect(page.getByText("Trainingdash")).toBeVisible();
   });
 
   test("navigates between screens", async ({ page }) => {
