@@ -20,3 +20,19 @@ rm -f "$CLAUDE_INSTALL"
 # ─── Project dependencies ───────────────────────────────────────────────────────
 echo "--> Installing project dependencies..."
 pnpm install
+
+# ─── Google Chrome stable ─────────────────────────────────────────────────────
+# Installs Chrome stable for chrome-devtools-mcp (headless DevTools inspection).
+# Playwright uses its own Chromium build; this is a separate binary.
+echo "--> Installing Google Chrome stable..."
+CHROME_DEB=$(mktemp --suffix=.deb)
+curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o "$CHROME_DEB"
+sudo apt-get update
+sudo apt-get install -y "$CHROME_DEB"
+rm -f "$CHROME_DEB"
+
+# ─── chrome-devtools-mcp ────────────────────────────────────────────────────────
+# Registered in .mcp.json; pre-fetch the package so the first `claude` launch
+# doesn't pay the npx download cost.
+echo "--> Pre-fetching chrome-devtools-mcp..."
+npx -y chrome-devtools-mcp@latest --version || true
