@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import type { Env } from "./env";
 import auth from "./routes/auth";
 
+export { LiveRoom } from "./live/room";
+
 const app = new Hono<{ Bindings: Env }>();
 
 app.get("/api/health", (c) => c.json({ ok: true }));
