@@ -6,6 +6,7 @@ const NAV = [
   { key: "today", label: "Today", to: "/" },
   { key: "activities", label: "Activities", to: "/activities" },
   { key: "progress", label: "Progress", to: "/progress" },
+  { key: "coach", label: "Coach", to: "/coach" },
 ] as const;
 
 export function Shell({

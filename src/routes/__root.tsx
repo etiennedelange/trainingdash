@@ -10,6 +10,7 @@ function RootLayout() {
   const activeKey =
     path.startsWith("/activities") ? "activities"
     : path.startsWith("/progress") ? "progress"
+    : path.startsWith("/coach") ? "coach"
     : "today";
 
   useLiveUpdates();
