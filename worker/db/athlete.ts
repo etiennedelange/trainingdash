@@ -10,7 +10,9 @@ interface AthleteDbRow {
 
 export async function getAthlete(db: D1Database): Promise<AthleteRecord | null> {
   const r = await db
-    .prepare("SELECT id, access_token, refresh_token, expires_at, connected FROM athlete LIMIT 1")
+    .prepare(
+      "SELECT id, access_token, refresh_token, expires_at, connected FROM athlete ORDER BY id LIMIT 1",
+    )
     .first<AthleteDbRow>();
   return r ? { ...r, connected: r.connected === 1 } : null;
 }
