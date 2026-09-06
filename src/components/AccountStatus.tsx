@@ -19,7 +19,7 @@ export function AccountStatus() {
     return (
       <a
         href="/auth/login"
-        className="block rounded-[11px] px-3 py-2.5 text-center text-sm font-bold text-ground"
+        className="block rounded-[var(--radius-nav)] px-3 py-2.5 text-center text-sm font-bold text-on-accent"
         style={{ background: "var(--color-accent)" }}
       >
         Connect Strava
@@ -37,7 +37,7 @@ export function AccountStatus() {
   return (
     <button
       onClick={() => void logout()}
-      className="w-full rounded-[11px] px-3 py-2.5 text-left text-sm font-bold text-muted hover:bg-raised"
+      className="w-full rounded-[var(--radius-nav)] px-3 py-2.5 text-left text-sm font-bold text-muted hover:bg-raised"
     >
       Log out
     </button>

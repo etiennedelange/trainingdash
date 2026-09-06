@@ -91,6 +91,8 @@ This is a deliberate rejection of generic fitness-app cheerfulness — no bright
 
 Interactive surfaces are tactile and precise: state changes read as a deliberate switch flip (background steps from `card`/`transparent` to `raised-panel`) rather than a soft hover fade. Nothing animates without reason — the one motion primitive currently defined (`toast-in`) is reserved for exactly one job: announcing that something just arrived.
 
+**A second mode exists: "The Paper Terminal."** `ThemeToggle` (in the sidebar footer) flips `<html data-theme>` between `dark` (this system, the default) and `light` — the same instrumentation idea, rendered as if printed on warm paper instead of glowing on a dark screen, rather than a different product. Every token below is a CSS custom property (`--color-*`, `--radius-*`, `--shadow-surface`, `--font-display`); the light mode redefines the same property names under `[data-theme="light"]` in `src/styles.css` rather than branching component markup, so a component that reads its color from a token is correct in both modes for free. The light mode's own values live in the `## Light Mode` callouts inside each section below and in the sidecar's `extensions.themes.light`, because the frontmatter schema only has room for one token set; the frontmatter above stays the dark mode's, as the shipped default.
+
 **Key Characteristics:**
 - One signal color (Signal Teal) carries all "this is active/primary" meaning across buttons, the current streak stat, the weekly-distance bar, the calendar heatmap peak, and the route line.
 - Depth comes from a four-step background ladder (Void Black → Deep Panel → Terminal Card → Raised Panel) plus hairline borders — not shadows.
@@ -129,6 +131,20 @@ Almost monochrome by design: a four-step dark neutral ladder, one signal color, 
 
 **The Closed Sport Palette Rule.** The four sport colors are a fixed lookup table (`Run/TrailRun`, `Ride/VirtualRide`, `Walk/Hike`, `WeightTraining/Workout`), consumed identically by `ActivityRow`'s dot, `MixBar`'s fill, and the future legend of any new chart. A new sport type falls back to Instrument Gray rather than inventing a fifth color.
 
+### Light Mode — "The Paper Terminal"
+
+Same roles, warmer and inverted: a cream-paper ladder instead of a near-black one, and a terracotta signal instead of teal. Every name below is that mode's value for the *same* token key listed above (e.g. Signal Teal's light-mode value is Ember Terracotta) — never a second parallel palette to choose between.
+
+- **Ember Terracotta** (`#d9673c`) replaces Signal Teal as the one signal color — same One Signal Rule, same set of contexts (CTA, current-streak stat, chart bar, calendar-heatmap peak, route line, logo gradient).
+- **Ember Terracotta Deep** (`#b14f29`) replaces Signal Teal Deep.
+- **On-Accent Ink** (`#241c14`) is a light-mode-only token (`--color-on-accent`): dark mode's button/logo-glyph text was Void Black, which doubles as the page background there, so it stayed high-contrast for free; light mode's page background is nearly white, so button and logo-glyph text need their own dedicated dark value instead of reusing the page background. Never point a button's label at `--color-ground` for this reason — always `--color-on-accent`.
+- **Paper White** (`#fffdf8`), **Warm Sand** (`#f7f1e7`), **Sidebar Tan** (`#efe3d1`), **Raised Tan** (`#f1e3ce`) replace the Terminal Card → Void Black ladder, lightest-to-card rather than darkest-to-card: Paper White is the card surface, Warm Sand the page, Sidebar Tan the nav, Raised Tan the hover/active step.
+- **Ink** (`#241c14`) replaces Readout White as primary text.
+- **Warm Umber** (`#786a58`) replaces Instrument Gray. This value is deliberately darker than a naive light-mode inversion would suggest: Instrument Gray is load-bearing body-grade text (nav labels, activity meta, stat captions) and the system's own dark-mode contrast for that role is ~5.5:1 against its card — Warm Umber is picked to clear the same ≥4.5:1 floor against Paper White, not just to "look about right."
+- **Warm Taupe** (`#b7a990`) replaces Dim Gray, at the same lighter, decorative-only contrast level dark mode already accepts for this tertiary role (chart axis labels, the least prominent helper lines) — not held to a stricter bar than the system already sets for itself.
+- **Sport palette:** Run/TrailRun → `#d9673c` (same as the signal color, preserving "running is the home sport"); Strength/WeightTraining/Workout → Rose (`#dd7c9e`); Ride/VirtualRide → Plum (`#9c82be`); Walk/Hike → Sage Teal (`#4e9c93`), the one intentionally cool note against the warm ground.
+- **Arrival Amber → Gold** (`#f2a65a` → `#f6cf7a`) stays reserved for the same not-yet-built live-arrival moment, just re-tinted lighter to sit on paper instead of void black.
+
 ## Typography
 
 **Display Font:** Space Grotesk (with ui-sans-serif, system-ui fallback)
@@ -148,6 +164,10 @@ Almost monochrome by design: a four-step dark neutral ladder, one signal color, 
 
 **The One Uppercase Rule.** Uppercase + letter-spacing is reserved for `StatTile` captions. It does not migrate to nav items, section headers, or buttons — those stay sentence case and bold instead.
 
+### Light Mode — display face swap
+
+The Display role's face changes from Space Grotesk to **Fraunces** (with ui-serif, Georgia fallback), a warm variable serif — everything else in the Hierarchy (sizes, weights, the Body/Label/Mono roles, both Named Rules) is unchanged. A bold slab-serif headline over a plain sans body/mono is the one typographic move that carries most of "paper" rather than "screen": the display face reads as printed, the data still reads as measured.
+
 ## Layout
 
 Single fixed sidebar (220px) plus a scrolling main column — no responsive collapse defined yet; the app is built for the owner's own desktop/tablet use first. Page content sits in a uniform `p-10` (40px) padding block regardless of route. Section rhythm steps in `mt-6`/`mt-8`/`mt-10` (24/32/40px) between a page's stat row, subheads, and content groups. Cards and rows stack with a tight `gap-2`/`gap-3` (8–12px). Stat tiles lay out as a `grid-cols-2 sm:grid-cols-4` responsive grid — the one place a breakpoint is currently used.
@@ -159,9 +179,17 @@ The system is flat by default. Depth is conveyed entirely through the four-step 
 ### Named Rules
 **The Flat-by-Default Rule.** No component gets a shadow for being "important" or "elevated" in the ordinary card/tile/row sense — use the next background step up instead. A shadow is reserved for elements that are literally floating above the page (toasts, future popovers/modals), never for in-flow cards.
 
+### Light Mode — paper lift replaces Flat-by-Default
+
+Light mode does not inherit the Flat-by-Default Rule; it replaces it with the opposite convention, on purpose, because "paper" reads as physical sheets resting on a table, not as glowing panels in a void. Every in-flow surface (`StatTile`, `ActivityRow`, the chart panels, the route-map frame) carries a soft, warm-tinted ambient shadow via the `--shadow-surface` token (`none` in dark mode, a diffuse `rgb(36 28 20 / …)` shadow in light mode) alongside its existing border and background — the border and background steps stay exactly as structured, the shadow is additive. `UpdatePrompt`'s floating-toast shadow is unchanged and untokenized in both modes; it was already the one shadow dark mode allowed, so light mode's more general lift doesn't need to touch it.
+
 ## Shapes
 
 Corner radius scales with element size on a tight five-step ladder, not a generic sm/md/lg jump: **control** (10px — small buttons, the logo mark, tab pills), **nav** (11px — nav items, `AccountStatus` actions), **row** (13px — `ActivityRow`), **tile** (15px, `--radius-tile` — `StatTile`), **card** (18px, `--radius-card` — chart panels, the route-map frame, the update toast). All corners are soft rounded rectangles; there are no sharp corners, no pills except the tab buttons and the MixBar track/fill, and no clipping or angular cuts anywhere in the system.
+
+### Light Mode — a softer, larger ladder
+
+Same five roles, each a few px larger and rounder to read as soft paper edges rather than tight instrument bezels: **control** 14px, **nav** 16px, **row** 18px, **tile** 20px, **card** 26px. The ladder's shape (five steps, ordered by element size) is the invariant that carries across modes; the exact px values are each mode's own.
 
 ## Components
 
@@ -191,6 +219,11 @@ Fixed 220px sidebar, Deep Panel background, Ghost Line right border. Logo mark i
 ### Charts (signature pattern)
 ECharts panels share one restrained palette: axis lines and split lines in Raised Panel gray, axis labels in Dim Gray/Instrument Gray at 10px, and exactly one data color — Signal Teal — for the meaningful series (the weekly-distance bar). The activity calendar heatmap ramps from Terminal Card through Signal Teal Deep to Signal Teal, so "more activity" always resolves toward the same signal color used everywhere else. The route map (MapLibre, dark tile style) draws its line in Signal Teal at 3px with rounded joins — the same color, once more, for "the thing the athlete actually did."
 
+Both ECharts components and `RouteMap` read their colors from the live CSS custom properties (via `useTheme`'s `cssVar` helper) rather than hardcoding hex, specifically so they repaint on a theme switch without their own light/dark branching. `RouteMap` additionally swaps the MapLibre basemap itself — `styles/dark` in dark mode, `styles/positron` (a light, neutral basemap) in light mode — since a canvas/WebGL layer has no CSS to inherit from; the route line color still comes from the token.
+
+### Light Mode — same pattern, warmer values
+No structural change: the same one-data-color rule, the same heatmap-ramps-to-the-signal-color idea, the same "the map's route line is the signal color" rule — just Ember Terracotta and the Paper-mode neutrals in place of Signal Teal and the dark ladder, and the Positron basemap in place of the dark one.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -199,10 +232,13 @@ ECharts panels share one restrained palette: axis lines and split lines in Raise
 - **Do** render every measurement, count, duration, and pace value in JetBrains Mono, at whatever size the context calls for.
 - **Do** treat the four sport colors as a closed, fixed lookup table shared by every component that displays a sport type.
 - **Do** reserve uppercase + letter-spacing exclusively for `StatTile`-style meta captions.
+- **Do** style every new component through the `--color-*` / `--radius-*` / `--shadow-surface` custom properties, never a hardcoded hex or px radius — that's the entire mechanism that keeps dark and light mode in sync for free.
+- **Do**, in light mode specifically, give any new button or icon drawn directly on the accent color its text/glyph color from `--color-on-accent`, never `--color-ground` — light mode's ground is nearly white, so that substitution silently kills the contrast dark mode happened to get for free.
 
 ### Don't:
-- **Don't** add a shadow to an in-flow card, tile, or row — shadows are reserved for elements floating above the page (toasts, future modals/popovers).
-- **Don't** introduce a second "primary" accent color alongside Signal Teal, or use Signal Teal purely decoratively.
-- **Don't** invent a fifth sport color ad hoc; fall back to Instrument Gray for an unmapped sport type instead.
-- **Don't** reach for bright, rounded, "cheerful fitness app" visual language (illustration, gradients-as-decoration, playful iconography) — the system is a quiet instrument panel, not a lifestyle brand.
-- **Don't** repurpose Arrival Amber/Gold or the `toast-in` animation for anything other than the live-arrival moment they're reserved for.
+- **Don't** add a shadow to an in-flow card, tile, or row in dark mode — shadows are reserved for elements floating above the page (toasts, future modals/popovers). Light mode inverts this on purpose (see Elevation & Depth's Light Mode callout); that inversion is the one place the two modes deliberately disagree.
+- **Don't** introduce a second "primary" accent color alongside Signal Teal (or Ember Terracotta in light mode), or use it purely decoratively.
+- **Don't** invent a fifth sport color ad hoc; fall back to Instrument Gray/Warm Umber for an unmapped sport type instead.
+- **Don't** reach for bright, rounded, "cheerful fitness app" visual language (illustration, gradients-as-decoration, playful iconography) — the system is a quiet instrument panel in either mode, not a lifestyle brand.
+- **Don't** repurpose the Arrival Amber/Gold pair or the `toast-in` animation for anything other than the live-arrival moment they're reserved for, in either mode.
+- **Don't** add a third theme or a per-component light/dark branch. The two-mode system is closed: extend it by adjusting the token values under `[data-theme="light"]` in `src/styles.css`, never by writing `theme === "light" ? ... : ...` inside a component beyond the two already-justified exceptions (`RouteMap`'s basemap URL, which is a canvas asset with no CSS equivalent, and `WeeklyDistance`/`ActivityCalendar`'s `useTheme()` read, which exists only to force an ECharts option recompute).

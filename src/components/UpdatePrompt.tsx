@@ -13,7 +13,7 @@ export function UpdatePrompt() {
       <span className="text-xs font-semibold">A new version is ready.</span>
       <button
         onClick={() => void updateServiceWorker(true)}
-        className="rounded-[10px] bg-accent px-3 py-1.5 text-xs font-bold text-ground"
+        className="rounded-[var(--radius-control)] bg-accent px-3 py-1.5 text-xs font-bold text-on-accent"
       >
         Reload
       </button>

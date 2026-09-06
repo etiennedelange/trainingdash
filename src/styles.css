@@ -13,6 +13,7 @@
 
   --color-accent: #2dd4bf;
   --color-accent-deep: #0e9488;
+  --color-on-accent: #0b0f14;
   --color-warm-from: #ff8a5c;
   --color-warm-to: #ffd166;
 
@@ -25,12 +26,57 @@
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
+  --radius-control: 10px;
+  --radius-nav: 11px;
+  --radius-row: 13px;
   --radius-tile: 15px;
   --radius-card: 18px;
+
+  --shadow-surface: none;
+}
+
+/*
+ * "Paper" light theme. Overrides the same custom properties the dark
+ * "Training Terminal" theme defines above — every component already reads
+ * colors/radii through var(), so this is the entire theme (see ThemeToggle).
+ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-ground: #f7f1e7;
+  --color-surface: #efe3d1;
+  --color-card: #fffdf8;
+  --color-raised: #f1e3ce;
+  --color-line: rgb(36 28 20 / 0.09);
+
+  --color-text: #241c14;
+  --color-muted: #786a58;
+  --color-faint: #b7a990;
+
+  --color-accent: #d9673c;
+  --color-accent-deep: #b14f29;
+  --color-on-accent: #241c14;
+  --color-warm-from: #f2a65a;
+  --color-warm-to: #f6cf7a;
+
+  --color-run: #d9673c;
+  --color-strength: #dd7c9e;
+  --color-ride: #9c82be;
+  --color-walk: #4e9c93;
+
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  --radius-control: 14px;
+  --radius-nav: 16px;
+  --radius-row: 18px;
+  --radius-tile: 20px;
+  --radius-card: 26px;
+
+  --shadow-surface: 0 16px 32px -18px rgb(36 28 20 / 0.28), 0 2px 8px -2px rgb(36 28 20 / 0.10);
 }
 
 html { background: var(--color-ground); color-scheme: dark; }
-body { margin: 0; font-family: var(--font-sans); color: var(--color-text); }
+body { margin: 0; font-family: var(--font-sans); color: var(--color-text); transition: background-color .2s ease, color .2s ease; }
 
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(-8px) scale(0.98); }
