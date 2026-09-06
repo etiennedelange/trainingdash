@@ -30,6 +30,8 @@ export interface BackfillState {
   last_error: string | null;
 }
 
+export type ActivitySummary = Omit<ActivityRow, "raw" | "polyline">;
+
 export type LiveMessage =
   | { type: "activity.upsert"; activity: ActivityRow }
   | { type: "activity.delete"; id: number };
