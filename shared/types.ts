@@ -32,6 +32,9 @@ export interface BackfillState {
 
 export type ActivitySummary = Omit<ActivityRow, "raw" | "polyline">;
 
+/** One activity in full. `raw` is server-only and never reaches the client. */
+export type ActivityDetail = Omit<ActivityRow, "raw">;
+
 export type LiveMessage =
   | { type: "activity.upsert"; activity: ActivityRow }
   | { type: "activity.delete"; id: number };

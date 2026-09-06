@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
-import type { ActivitySummary } from "#shared/types";
+import type { ActivityDetail, ActivitySummary } from "#shared/types";
 import { requireSession } from "../middleware/require-session";
 import { getAthlete } from "../db/athlete";
 import { listActivities, getActivity } from "../db/activities";
@@ -31,7 +31,7 @@ api.get("/activities/:id", async (c) => {
   const row = await getActivity(c.env.DB, id);
   if (!row) return c.json({ error: "not found" }, 404);
   const { raw: _raw, ...rest } = row;
-  return c.json(rest);
+  return c.json(rest satisfies ActivityDetail);
 });
 
 export default api;
