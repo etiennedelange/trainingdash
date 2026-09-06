@@ -1,7 +1,10 @@
-import type { Env } from "../env";
+import type { Env as WorkerEnv } from "../env";
+import type { D1Migration } from "cloudflare:test";
 
-declare module "cloudflare:test" {
-  interface ProvidedEnv extends Env {
-    TEST_MIGRATIONS: D1Migration[];
+declare global {
+  namespace Cloudflare {
+    interface Env extends WorkerEnv {
+      TEST_MIGRATIONS: D1Migration[];
+    }
   }
 }
