@@ -79,14 +79,17 @@ describe("webhook to websocket", () => {
       },
     });
 
-    const ack = await SELF.fetch("http://example.com/webhook", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        object_type: "activity", object_id: 7, aspect_type: "create",
-        owner_id: 42, subscription_id: 1, event_time: 1, updates: {},
-      }),
-    });
+    const ack = await SELF.fetch(
+      `http://example.com/webhook?token=${env.STRAVA_VERIFY_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          object_type: "activity", object_id: 7, aspect_type: "create",
+          owner_id: 42, subscription_id: 1, event_time: 1, updates: {},
+        }),
+      },
+    );
     expect(ack.status).toBe(200);
 
     const msg = JSON.parse(await received) as LiveMessage;

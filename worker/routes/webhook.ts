@@ -23,8 +23,22 @@ webhook.get("/", (c) => {
 /**
  * Event receipt. Acknowledge first, work second: the two-second deadline is
  * far shorter than a Strava fetch plus a D1 write.
+ *
+ * Strava does not sign webhook payloads, and `owner_id` alone is public
+ * (visible in any Strava profile URL), so it cannot authenticate a request.
+ * Instead the registered callback URL carries `?token=<STRAVA_VERIFY_TOKEN>`
+ * (see scripts/webhook.ts) and Strava echoes that same query string on every
+ * delivery, not just at subscription-validation time. A missing or wrong
+ * token still gets a 200 — same "ack anyway, don't process" shape as a
+ * malformed body — so a prober can't distinguish "wrong token" from
+ * "processed" by status code, and Strava's retry/health checks (which expect
+ * 200) are unaffected even if this is ever misconfigured.
  */
 webhook.post("/", async (c) => {
+  if (c.req.query("token") !== c.env.STRAVA_VERIFY_TOKEN) {
+    return c.json({ ok: true });
+  }
+
   let event: StravaWebhookEvent | null = null;
   try {
     event = (await c.req.json()) as StravaWebhookEvent;
