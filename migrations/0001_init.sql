@@ -3,7 +3,8 @@ CREATE TABLE athlete (
   access_token  TEXT NOT NULL,
   refresh_token TEXT NOT NULL,
   expires_at    INTEGER NOT NULL,
-  connected     INTEGER NOT NULL DEFAULT 1
+  connected     INTEGER NOT NULL DEFAULT 1,
+  singleton     INTEGER NOT NULL DEFAULT 1 UNIQUE CHECK (singleton = 1)
 );
 
 CREATE TABLE activities (
