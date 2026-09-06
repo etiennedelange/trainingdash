@@ -82,6 +82,14 @@ describe("parseRateLimit", () => {
     expect(parseRateLimit(new Headers())).toBeNull();
   });
 
+  it("returns null when a header value is non-numeric", () => {
+    const h = new Headers({
+      "X-RateLimit-Limit": "abc,600",
+      "X-RateLimit-Usage": "300,15000",
+    });
+    expect(parseRateLimit(h)).toBeNull();
+  });
+
   it("flags nearness at 90% of either window", () => {
     expect(isNearLimit({ shortUsage: 540, shortLimit: 600, dailyUsage: 1, dailyLimit: 30000 })).toBe(true);
     expect(isNearLimit({ shortUsage: 1, shortLimit: 600, dailyUsage: 27000, dailyLimit: 30000 })).toBe(true);
