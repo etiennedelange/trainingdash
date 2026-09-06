@@ -29,3 +29,7 @@ export interface BackfillState {
   complete: boolean;
   last_error: string | null;
 }
+
+export type LiveMessage =
+  | { type: "activity.upsert"; activity: ActivityRow }
+  | { type: "activity.delete"; id: number };
