@@ -49,17 +49,19 @@ export function useCoachStream() {
           const payload = line.slice(6);
           if (payload === "[DONE]") continue;
 
+          let parsed: { text?: string; error?: string } | null = null;
           try {
-            const parsed = JSON.parse(payload) as { text?: string; error?: string };
-            if (parsed.error) throw new Error(parsed.error);
-            if (parsed.text) {
-              answer += parsed.text;
-              const withAnswer: CoachTurn[] = [...next, { role: "assistant", content: answer }];
-              turnsRef.current = withAnswer;
-              setTurns(withAnswer);
-            }
+            parsed = JSON.parse(payload) as { text?: string; error?: string };
           } catch {
             // A frame we cannot parse is skipped; the stream continues.
+            continue;
+          }
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.text) {
+            answer += parsed.text;
+            const withAnswer: CoachTurn[] = [...next, { role: "assistant", content: answer }];
+            turnsRef.current = withAnswer;
+            setTurns(withAnswer);
           }
         }
       }

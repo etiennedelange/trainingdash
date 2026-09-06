@@ -57,6 +57,18 @@ describe("useCoachStream", () => {
     expect(api.turns[0]).toMatchObject({ role: "user", content: "hi" });
   });
 
+  it("surfaces a mid-stream error frame", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+      sseResponse(['data: {"error":"upstream failed"}\n\n']),
+    ));
+
+    await render(createElement(Probe));
+    await flush(() => api.ask("How was my week?", "2026-09-06"));
+
+    expect(api.error).toBeTruthy();
+    expect(api.error).toContain("upstream failed");
+  });
+
   it("ignores an empty question", async () => {
     const spy = vi.fn();
     vi.stubGlobal("fetch", spy);

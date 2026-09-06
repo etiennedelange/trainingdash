@@ -18,7 +18,7 @@ function parseTurns(value: unknown): CoachTurn[] | null {
     if (typeof item !== "object" || item === null) return null;
     const { role, content } = item as { role?: unknown; content?: unknown };
     if ((role !== "user" && role !== "assistant") || typeof content !== "string") return null;
-    if (content.length > 4000) return null;
+    if (role === "user" && content.length > 4000) return null;
     turns.push({ role, content });
   }
 
