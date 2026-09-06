@@ -12,7 +12,8 @@
     "db:migrate:local": "wrangler d1 migrations apply trainingdash --local",
     "db:migrate:remote": "wrangler d1 migrations apply trainingdash --remote",
     "deploy": "pnpm build && wrangler deploy",
-    "webhook": "node --experimental-strip-types scripts/webhook.ts"
+    "webhook": "node --experimental-strip-types scripts/webhook.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^2.0.0",
