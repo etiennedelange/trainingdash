@@ -13,6 +13,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply trainingdash --remote",
     "deploy": "pnpm build && wrangler deploy",
     "webhook": "node --experimental-strip-types scripts/webhook.ts",
+    "mock-webhook": "node --experimental-strip-types scripts/mock-webhook.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
