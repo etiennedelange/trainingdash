@@ -1,5 +1,11 @@
 import { defineConfig } from "vitest/config";
-import { cloudflarePool, cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
+import {
+  cloudflarePool,
+  cloudflareTest,
+  readD1Migrations,
+} from "@cloudflare/vitest-pool-workers";
+import react from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
 import path from "node:path";
 
 const migrations = await readD1Migrations(path.join(import.meta.dirname, "migrations"));
@@ -12,10 +18,38 @@ const cfConfig = {
   },
 };
 
+const alias = {
+  "@": path.resolve(import.meta.dirname, "./src"),
+  "#shared": path.resolve(import.meta.dirname, "./shared"),
+};
+
 export default defineConfig({
-  plugins: [cloudflareTest(cfConfig)],
   test: {
-    setupFiles: ["./worker/test/apply-migrations.ts"],
-    pool: cloudflarePool(cfConfig),
+    projects: [
+      {
+        plugins: [cloudflareTest(cfConfig)],
+        resolve: { alias },
+        test: {
+          name: "worker",
+          include: ["worker/**/*.test.ts", "shared/**/*.test.ts"],
+          setupFiles: ["./worker/test/apply-migrations.ts"],
+          pool: cloudflarePool(cfConfig),
+        },
+      },
+      {
+        plugins: [react()],
+        resolve: { alias },
+        test: {
+          name: "browser",
+          include: ["src/**/*.test.{ts,tsx}"],
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [{ browser: "chromium" }],
+          },
+        },
+      },
+    ],
   },
 });
