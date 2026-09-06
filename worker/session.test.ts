@@ -24,4 +24,13 @@ describe("session", () => {
     expect(await verifySession(undefined, SECRET)).toBeNull();
     expect(await verifySession("nonsense", SECRET)).toBeNull();
   });
+
+  it("throws loudly rather than signing with an empty secret", async () => {
+    await expect(signSession(42, "")).rejects.toThrow("SESSION_SECRET is not configured");
+  });
+
+  it("throws loudly rather than verifying with an empty secret", async () => {
+    const token = await signSession(42, SECRET);
+    await expect(verifySession(token, "")).rejects.toThrow("SESSION_SECRET is not configured");
+  });
 });

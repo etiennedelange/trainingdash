@@ -1,6 +1,7 @@
 export const SESSION_COOKIE = "sd_session";
 
 async function key(secret: string): Promise<CryptoKey> {
+  if (!secret) throw new Error("SESSION_SECRET is not configured");
   return await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
