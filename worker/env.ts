@@ -1,6 +1,8 @@
+import type { LiveRoom } from "./live/room";
+
 export interface Env {
   DB: D1Database;
-  LIVE: DurableObjectNamespace;
+  LIVE: DurableObjectNamespace<LiveRoom>;
   ASSETS: Fetcher;
   APP_URL: string;
   ALLOWED_ATHLETE_ID: string;
