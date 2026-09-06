@@ -30,7 +30,8 @@ api.get("/activities/:id", async (c) => {
   if (!Number.isInteger(id)) return c.json({ error: "bad id" }, 400);
   const row = await getActivity(c.env.DB, id);
   if (!row) return c.json({ error: "not found" }, 404);
-  return c.json(row);
+  const { raw: _raw, ...rest } = row;
+  return c.json(rest);
 });
 
 export default api;
