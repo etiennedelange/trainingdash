@@ -1,5 +1,5 @@
 {
-  "name": "stravadash-container",
+  "name": "trainingdash-container",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
   "features": {
     "ghcr.io/devcontainers-extra/features/pnpm:2": {},
@@ -26,7 +26,7 @@
   ],
   "portsAttributes": {
     "5173": {
-      "label": "stravadash dev (SPA + Worker)",
+      "label": "trainingdash dev (SPA + Worker)",
       "onAutoForward": "notify"
     }
   }
