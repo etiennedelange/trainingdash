@@ -82,6 +82,20 @@ node scripts/webhook.ts create https://<tunnel-host>/webhook
 Strava allows exactly one subscription per application — use
 `node scripts/webhook.ts list` and `... delete <id>` to manage it.
 
+Strava has no mock/sandbox service for webhook events; its own docs say to
+POST a synthetic payload to your callback directly. `scripts/mock-webhook.ts`
+does that against a running dev server, with random event data:
+
+```bash
+pnpm mock-webhook                                    # one random event
+pnpm mock-webhook --owner-id <your-athlete-id>        # matches a connected athlete
+pnpm mock-webhook --aspect delete --object-id 123     # a specific event
+pnpm mock-webhook --count 5                           # a batch of random events
+```
+
+Without `--owner-id` matching the connected athlete, `worker/sync/ingest.ts`
+still acks 200 but skips processing — useful for exercising the ack path only.
+
 ### 5. Deploy
 
 ```bash
