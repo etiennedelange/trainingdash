@@ -5,6 +5,9 @@ import auth from "./routes/auth";
 import api from "./routes/api";
 import webhook from "./routes/webhook";
 import { verifySession, SESSION_COOKIE } from "./session";
+import { getBackfillState } from "./db/sync";
+import { StravaClient } from "./strava/client";
+import { runBackfill } from "./sync/backfill";
 
 export { LiveRoom } from "./live/room";
 
@@ -25,4 +28,17 @@ app.get("/live", async (c) => {
   return await stub.fetch("http://do/connect", { headers: { Upgrade: "websocket" } });
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(
+      (async () => {
+        const state = await getBackfillState(env.DB);
+        if (state.complete) return;
+        const client = await StravaClient.create(env);
+        if (!client) return;
+        await runBackfill(env, client);
+      })().catch((err) => console.error("scheduled backfill failed", err)),
+    );
+  },
+} satisfies ExportedHandler<Env>;
