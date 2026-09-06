@@ -28,6 +28,11 @@ app.get("/live", async (c) => {
   return await stub.fetch("http://do/connect", { headers: { Upgrade: "websocket" } });
 });
 
+// Catch-all: everything not matched above (the SPA shell, static assets) is
+// served from the built dist/. Registered last so it never shadows a route
+// above it — Hono matches in registration order.
+app.get("*", (c) => c.env.ASSETS.fetch(c.req.raw));
+
 export default {
   fetch: app.fetch,
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
