@@ -1,17 +1,21 @@
 import { defineConfig } from "vitest/config";
-import { cloudflarePool, cloudflareTest } from "@cloudflare/vitest-pool-workers";
+import { cloudflarePool, cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
+import path from "node:path";
+
+const migrations = await readD1Migrations(path.join(import.meta.dirname, "migrations"));
+
+const cfConfig = {
+  wrangler: { configPath: "./wrangler.jsonc" },
+  miniflare: {
+    compatibilityFlags: ["nodejs_compat"],
+    bindings: { TEST_MIGRATIONS: migrations },
+  },
+};
 
 export default defineConfig({
-  plugins: [
-    cloudflareTest({
-      wrangler: { configPath: "./wrangler.jsonc" },
-      miniflare: { compatibilityFlags: ["nodejs_compat"] },
-    }),
-  ],
+  plugins: [cloudflareTest(cfConfig)],
   test: {
-    pool: cloudflarePool({
-      wrangler: { configPath: "./wrangler.jsonc" },
-      miniflare: { compatibilityFlags: ["nodejs_compat"] },
-    }),
+    setupFiles: ["./worker/test/apply-migrations.ts"],
+    pool: cloudflarePool(cfConfig),
   },
 });
