@@ -10,4 +10,7 @@ export interface Env {
   STRAVA_CLIENT_SECRET: string;
   STRAVA_VERIFY_TOKEN: string;
   SESSION_SECRET: string;
+  VAPID_PUBLIC_KEY: string;
+  VAPID_PRIVATE_KEY: string;
+  VAPID_SUBJECT: string;
 }

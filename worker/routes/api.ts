@@ -5,6 +5,7 @@ import { requireSession } from "../middleware/require-session";
 import { getAthlete } from "../db/athlete";
 import { listActivities, getActivity } from "../db/activities";
 import { getBackfillState } from "../db/sync";
+import { savePushSubscription } from "../db/push";
 
 const api = new Hono<{ Bindings: Env; Variables: { athleteId: number } }>();
 
@@ -16,6 +17,7 @@ api.get("/me", async (c) => {
     athleteId: c.get("athleteId"),
     connected: athlete?.connected ?? false,
     backfill: await getBackfillState(c.env.DB),
+    vapidPublicKey: c.env.VAPID_PUBLIC_KEY,
   });
 });
 
@@ -32,6 +34,18 @@ api.get("/activities/:id", async (c) => {
   if (!row) return c.json({ error: "not found" }, 404);
   const { raw: _raw, ...rest } = row;
   return c.json(rest satisfies ActivityDetail);
+});
+
+api.post("/push/subscribe", async (c) => {
+  const body = (await c.req.json()) as { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
+  if (!body.endpoint || !body.keys?.p256dh || !body.keys.auth) {
+    return c.json({ error: "malformed subscription" }, 400);
+  }
+  await savePushSubscription(c.env.DB, {
+    endpoint: body.endpoint,
+    keys: { p256dh: body.keys.p256dh, auth: body.keys.auth },
+  });
+  return c.json({ ok: true });
 });
 
 export default api;
