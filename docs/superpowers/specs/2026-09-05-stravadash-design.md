@@ -231,7 +231,7 @@ to a paid API.
 
 Request shape:
 
-- `model: "claude-opus-5"`.
+- `model: "claude-sonnet-5"`.
 - `thinking: { type: "adaptive" }`. `budget_tokens` is **removed** on Opus 5
   and returns a 400 — it must not appear in the code.
 - `output_config: { effort: "medium" }`. Chat is not a workload that repays

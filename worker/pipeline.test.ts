@@ -80,7 +80,7 @@ describe("webhook to websocket", () => {
     });
 
     const ack = await SELF.fetch(
-      `http://example.com/webhook?token=${env.STRAVA_VERIFY_TOKEN}`,
+      `http://example.com/webhook/${env.STRAVA_VERIFY_TOKEN}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
