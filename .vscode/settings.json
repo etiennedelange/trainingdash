@@ -1,0 +1,11 @@
+{
+  "remote.otherPortsAttributes": {
+    "onAutoForward": "ignore"
+  },
+  "remote.portsAttributes": {
+    "5173": {
+      "label": "trainingdash dev (SPA + Worker)",
+      "onAutoForward": "notify"
+    }
+  }
+}

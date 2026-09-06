@@ -6,10 +6,15 @@
  *   pnpm webhook delete <id>
  *
  * Reads credentials from .dev.vars. `create` automatically appends
- * `?token=<STRAVA_VERIFY_TOKEN>` to the callback URL — every event delivery
- * (not just subscription validation) carries this same query string, and
- * worker/routes/webhook.ts checks it on every POST since owner_id alone is
- * public and cannot authenticate a request.
+ * `/<STRAVA_VERIFY_TOKEN>` as the callback URL's final path segment — every
+ * event delivery (not just subscription validation) replays this same URL,
+ * and worker/routes/webhook.ts checks the path segment on every POST since
+ * owner_id alone is public and cannot authenticate a request. A path segment
+ * is used rather than a query param because Strava's subscription API
+ * concatenates its own `?hub.*` params with a literal `?` even when the
+ * callback URL already has one — confirmed in production to silently mangle
+ * a pre-existing query string (a registered `?token=x` came back from Strava
+ * as `?token=x?hub.verify_token=...`, swallowing hub.verify_token entirely).
  */
 import { readFileSync } from "node:fs";
 
@@ -47,7 +52,7 @@ async function list(): Promise<void> {
 
 async function create(callbackUrl: string): Promise<void> {
   const url = new URL(callbackUrl);
-  url.searchParams.set("token", verifyToken!);
+  url.pathname = `${url.pathname.replace(/\/$/, "")}/${encodeURIComponent(verifyToken!)}`;
   const body = new URLSearchParams({
     client_id: clientId!,
     client_secret: clientSecret!,
@@ -80,7 +85,7 @@ switch (command) {
     if (!arg) {
       console.error(
         "usage: pnpm webhook create https://<host>/webhook\n" +
-          "(the verify token is appended as ?token=... automatically)",
+          "(the verify token is appended as a trailing path segment automatically)",
       );
       process.exit(1);
     }

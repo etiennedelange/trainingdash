@@ -29,5 +29,8 @@
       "label": "trainingdash dev (SPA + Worker)",
       "onAutoForward": "notify"
     }
+  },
+  "otherPortsAttributes": {
+    "onAutoForward": "ignore"
   }
 }
