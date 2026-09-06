@@ -5,7 +5,11 @@
  *   pnpm webhook create https://<public-host>/webhook
  *   pnpm webhook delete <id>
  *
- * Reads credentials from .dev.vars.
+ * Reads credentials from .dev.vars. `create` automatically appends
+ * `?token=<STRAVA_VERIFY_TOKEN>` to the callback URL — every event delivery
+ * (not just subscription validation) carries this same query string, and
+ * worker/routes/webhook.ts checks it on every POST since owner_id alone is
+ * public and cannot authenticate a request.
  */
 import { readFileSync } from "node:fs";
 
@@ -42,10 +46,12 @@ async function list(): Promise<void> {
 }
 
 async function create(callbackUrl: string): Promise<void> {
+  const url = new URL(callbackUrl);
+  url.searchParams.set("token", verifyToken!);
   const body = new URLSearchParams({
     client_id: clientId!,
     client_secret: clientSecret!,
-    callback_url: callbackUrl,
+    callback_url: url.toString(),
     verify_token: verifyToken!,
   });
   const res = await fetch(ENDPOINT, { method: "POST", body });
@@ -72,7 +78,10 @@ switch (command) {
     break;
   case "create":
     if (!arg) {
-      console.error("usage: pnpm webhook create https://<host>/webhook");
+      console.error(
+        "usage: pnpm webhook create https://<host>/webhook\n" +
+          "(the verify token is appended as ?token=... automatically)",
+      );
       process.exit(1);
     }
     await create(arg);
