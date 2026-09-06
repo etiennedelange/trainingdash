@@ -25,6 +25,24 @@
 - **No test may call the real API.** Every test stubs the SDK.
 - **Commit after every task.**
 
+## What Plans 1 and 2 established
+
+- **`worker/env.ts` is edited, not rewritten.** It imports the `LiveRoom` class
+  type and parameterises `DurableObjectNamespace<LiveRoom>`. Add
+  `ANTHROPIC_API_KEY: string;` as a field.
+- **New Worker routes must be registered above the SPA catch-all.** `worker/index.ts`
+  ends with `app.get("*", c => c.env.ASSETS.fetch(c.req.raw))`, and Hono matches
+  in registration order. Mounting the Coach inside the existing `/api` sub-app
+  keeps it above that line and inherits `requireSession` for free.
+- **Tests are split into two Vitest projects** (Plan 2, Task 1): `worker` runs
+  `worker/**` and `shared/**` in workerd; `browser` runs `src/**` in Chromium.
+  `worker/coach/*.test.ts` goes in the first, `src/hooks/useCoachStream.test.ts`
+  in the second.
+- **`shared/aggregate.ts` is pure and lives in the worker project**, so the
+  digest can import it directly.
+- **The dev server is `vite --host`** with `@cloudflare/vite-plugin`, so
+  `/api/coach` is reachable on the same origin as the SPA with no proxy config.
+
 ## File Structure
 
 | File | Responsibility |
@@ -246,7 +264,9 @@ git commit -m "feat: add the deterministic coach training digest"
 pnpm add @anthropic-ai/sdk
 ```
 
-Add to `worker/env.ts`:
+Add one field to the **existing** `Env` interface in `worker/env.ts` (it
+already imports `LiveRoom` and declares the other bindings — do not recreate
+it):
 
 ```ts
   ANTHROPIC_API_KEY: string;
@@ -618,13 +638,18 @@ export default coach;
 
 - [ ] **Step 4: Mount it in `worker/routes/api.ts`**
 
-Mount under the existing `api.use("*", requireSession)` so the guard applies:
+`worker/routes/api.ts` already calls `api.use("*", requireSession)` at the top,
+so mounting here inherits the guard and lands above the SPA catch-all in
+`worker/index.ts`:
 
 ```ts
 import coach from "./coach";
-// after the other routes:
+// after api.get("/activities/:id", ...):
 api.route("/coach", coach);
 ```
+
+Do not register it in `worker/index.ts` directly — anything added after
+`app.get("*", ...)` is unreachable.
 
 - [ ] **Step 5: Run it to verify it passes**
 
@@ -960,7 +985,10 @@ git commit -m "feat: add the Coach screen"
 ```bash
 STRAVA_CLIENT_ID=
 STRAVA_CLIENT_SECRET=
+# Doubles as the webhook callback's final path segment — keep it URL-safe
+# and treat it as a secret, not a nonce.
 STRAVA_VERIFY_TOKEN=
+# openssl rand -hex 32 — signing throws if this is empty.
 SESSION_SECRET=
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
@@ -976,8 +1004,26 @@ structure but making every claim true of the shipped app:
 - **Stack table** — copy from the spec's §2, which is now accurate.
 - **How live updates work** — keep the existing ASCII diagram; it is correct.
 - **Setup** — Strava app, `.dev.vars`, `pnpm exec wrangler d1 create stravadash`, `pnpm db:migrate:local`, `pnpm dev`.
-- **Webhooks in development** — `cloudflared tunnel --url http://localhost:5173`, then `pnpm webhook create https://<tunnel-host>/webhook`. Note the one-subscription-per-application limit.
-- **Deploy** — the secret list from `.dev.vars.example` via `wrangler secret put`, `APP_URL` and `ALLOWED_ATHLETE_ID` in `wrangler.jsonc`, `pnpm db:migrate:remote`, `pnpm deploy`.
+- **Webhooks in development** — `cloudflared tunnel --url http://localhost:5173`,
+  then `pnpm webhook create https://<tunnel-host>/webhook`. Document three
+  things the build discovered, because none is guessable:
+  - `create` **appends `/<STRAVA_VERIFY_TOKEN>`** to the callback URL itself.
+    Pass the bare `/webhook` URL; do not add the token by hand.
+  - The token is a **path segment, not a query param**, because Strava
+    concatenates its own `?hub.*` params with a literal `?` and mangles any
+    pre-existing query string.
+  - Strava does not sign payloads and `owner_id` is public, so that path token
+    is the only thing authenticating a delivery. A wrong token still returns
+    200 by design.
+  - Strava allows exactly one subscription per application; `list` then
+    `delete <id>` before creating a new one.
+  - `vite.config.ts` sets `server.allowedHosts: [".trycloudflare.com"]`, without
+    which Vite rejects the tunnel's random hostname.
+- **Deploy** — the secret list from `.dev.vars.example` via `wrangler secret put`,
+  `APP_URL` and `ALLOWED_ATHLETE_ID` in `wrangler.jsonc`, `pnpm db:migrate:remote`,
+  `pnpm deploy`. Mention that `SESSION_SECRET` now **throws on use if unset**
+  rather than silently signing with an empty key, so a missing secret fails the
+  first request loudly instead of issuing forgeable cookies.
 - **Commands table** — `dev`, `build`, `test`, `test:e2e`, `typecheck`, `webhook`, `deploy`.
 - **Layout** — `worker/`, `shared/`, `src/`, `migrations/`, `scripts/`, `e2e/`, `docs/superpowers/`.
 - **Costs** — state plainly that everything runs inside Cloudflare's free tier except the Coach, which calls the Anthropic API per question.

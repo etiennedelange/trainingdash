@@ -22,6 +22,50 @@
 - **pnpm 11 rules** in `pnpm-workspace.yaml` are authoritative. A dependency with a build script must be added to `allowBuilds` with a justifying comment.
 - **Commit after every task.**
 
+## What Plan 1 discovered
+
+Plan 1 was written before any code existed. Building it turned up six things
+this plan must respect — several would be silent failures otherwise.
+
+**1. The webhook token lives in the URL path, not a query param.**
+The route is `/webhook/:token`, and `scripts/webhook.ts create` appends
+`/<STRAVA_VERIFY_TOKEN>` to the callback URL automatically. The reason is
+worth knowing: Strava's subscription API concatenates its own `?hub.*` params
+onto the registered callback with a **literal `?`**, even when the URL already
+has a query string — a registered `?token=x` came back in production as
+`?token=x?hub.verify_token=…`, swallowing `hub.verify_token` entirely. A path
+segment survives that. **Any test or tool that posts a webhook event must use
+`/webhook/<token>`**; posting to bare `/webhook` matches no route.
+
+**2. Strava does not sign webhook payloads**, and `owner_id` is public — it's
+in every Strava profile URL — so it cannot authenticate anything. The path
+token is the authentication. A wrong token still returns 200, deliberately, so
+a prober cannot distinguish "rejected" from "processed" by status code.
+
+**3. The build uses `@cloudflare/vite-plugin`.** `vite dev` runs the Worker and
+the SPA together on one port; there is no separate `wrangler dev`. `vite.config.ts`
+already exists — modify it, never recreate it. It also carries
+`server.allowedHosts: [".trycloudflare.com"]`, without which a quick tunnel is
+rejected by Vite's Host-header check.
+
+**4. `vitest.config.ts` uses the current pool API** — `cloudflarePool` and
+`cloudflareTest` from `@cloudflare/vitest-pool-workers`, not the older
+`defineWorkersConfig`. It currently globs every test into workerd, so adding
+React tests requires splitting into projects (Task 1, Step 7).
+
+**5. The Worker serves the SPA through an explicit catch-all**, `app.get("*", c
+=> c.env.ASSETS.fetch(c.req.raw))`, registered last so it never shadows
+`/api`, `/auth`, `/webhook` or `/live`. Any new Worker route must be registered
+**above** it.
+
+**6. `Env.LIVE` is `DurableObjectNamespace<LiveRoom>`**, parameterised, and
+`worker/env.ts` imports the class type. Adding bindings means editing that
+interface, not redeclaring it.
+
+Already installed, do not re-install: `vite-plugin-pwa`, `@vitejs/plugin-react`,
+`wrangler`, `vitest`, `@cloudflare/vitest-pool-workers`, `@types/node`,
+TanStack Query and Router, React 19, Hono.
+
 ## File Structure
 
 | File | Responsibility |
@@ -61,10 +105,13 @@
 ```bash
 pnpm add -D tailwindcss @tailwindcss/vite
 pnpm add motion clsx tailwind-merge
-pnpm add -D vitest-browser-react @vitest/browser playwright
+pnpm add -D vitest-browser-react @vitest/browser playwright @playwright/test
 ```
 
 `@tailwindcss/oxide` is already in `allowBuilds` in `pnpm-workspace.yaml`.
+Do **not** add React, Hono, TanStack, wrangler, vitest or `vite-plugin-pwa` —
+Plan 1 already installed them, and `pnpm add` on an existing dependency will
+bump it past `minimumReleaseAge` for no reason.
 
 - [ ] **Step 2: Write `src/styles.css`**
 
@@ -114,12 +161,19 @@ body { margin: 0; font-family: var(--font-sans); color: var(--color-text); }
 
 - [ ] **Step 3: Wire Tailwind and the fonts**
 
-In `vite.config.ts`, add the plugin:
+`vite.config.ts` **already exists** and carries the `cloudflare()` plugin and
+the `allowedHosts` entry for tunnels. Add Tailwind to the existing array; do
+not rewrite the file:
 
 ```ts
 import tailwindcss from "@tailwindcss/vite";
-// plugins: [react(), tailwindcss()]
+
+// plugins: [react(), tailwindcss(), cloudflare()]
 ```
+
+Keep `cloudflare()` last: it wraps the dev server so the Worker handles
+requests the SPA does not, and plugins that transform client assets should run
+before it.
 
 In `index.html`, inside `<head>`, add the font links and update the title:
 
@@ -213,24 +267,70 @@ export function Shell({
 
 - [ ] **Step 7: Configure the browser test project**
 
-In `vitest.config.ts`, the Worker pool and a browser pool cannot share one project. Add a `projects` array so both run under `pnpm test`:
+The existing `vitest.config.ts` globs **every** test into workerd, so a React
+test would try to render in a Worker isolate. Split it into two projects.
+Replace the file with this — note it keeps the exact `cloudflarePool` /
+`cloudflareTest` API Plan 1 established:
 
 ```ts
-// alongside the existing workers config, wrap both in:
-// test: { projects: [ { /* existing workers config, name: "worker" */ }, browserProject ] }
-const browserProject = {
-  test: {
-    name: "browser",
-    include: ["src/**/*.test.{ts,tsx}"],
-    browser: {
-      enabled: true,
-      provider: "playwright",
-      instances: [{ browser: "chromium" }],
-      headless: true,
-    },
+import { defineConfig } from "vitest/config";
+import {
+  cloudflarePool,
+  cloudflareTest,
+  readD1Migrations,
+} from "@cloudflare/vitest-pool-workers";
+import react from "@vitejs/plugin-react";
+import path from "node:path";
+
+const migrations = await readD1Migrations(path.join(import.meta.dirname, "migrations"));
+
+const cfConfig = {
+  wrangler: { configPath: "./wrangler.jsonc" },
+  miniflare: {
+    compatibilityFlags: ["nodejs_compat"],
+    bindings: { TEST_MIGRATIONS: migrations },
   },
 };
+
+const alias = {
+  "@": path.resolve(import.meta.dirname, "./src"),
+  "#shared": path.resolve(import.meta.dirname, "./shared"),
+};
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        plugins: [cloudflareTest(cfConfig)],
+        resolve: { alias },
+        test: {
+          name: "worker",
+          include: ["worker/**/*.test.ts", "shared/**/*.test.ts"],
+          setupFiles: ["./worker/test/apply-migrations.ts"],
+          pool: cloudflarePool(cfConfig),
+        },
+      },
+      {
+        plugins: [react()],
+        resolve: { alias },
+        test: {
+          name: "browser",
+          include: ["src/**/*.test.{ts,tsx}"],
+          browser: {
+            enabled: true,
+            provider: "playwright",
+            headless: true,
+            instances: [{ browser: "chromium" }],
+          },
+        },
+      },
+    ],
+  },
+});
 ```
+
+`shared/**` stays in the worker project: `shared/aggregate.ts` is pure, so it
+runs correctly in either, and keeping it there avoids a second browser launch.
 
 - [ ] **Step 8: Run it to verify it passes**
 
@@ -2158,11 +2258,10 @@ git commit -m "feat: add activity detail with the MapLibre route map"
 - Consumes: nothing.
 - Produces: a registered service worker and `<UpdatePrompt />`.
 
-- [ ] **Step 1: Install**
+- [ ] **Step 1: Confirm the plugin is present**
 
-```bash
-pnpm add -D vite-plugin-pwa
-```
+`vite-plugin-pwa` is **already a devDependency** (Plan 1 added it). Verify with
+`grep vite-plugin-pwa package.json` rather than installing it again.
 
 - [ ] **Step 2: Configure the plugin in `vite.config.ts`**
 
@@ -2191,10 +2290,24 @@ VitePWA({
     globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
     // API responses are never precached — the dashboard must not show a
     // stale history that looks current. The shell is offline; the data is not.
-    navigateFallbackDenylist: [/^\/api/, /^\/auth/, /^\/webhook/, /^\/live/],
+    //
+    // These four must match the Worker's own routes exactly. /webhook is
+    // matched as a prefix because the live route is /webhook/:token, not
+    // bare /webhook (see "What Plan 1 discovered").
+    navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/webhook/, /^\/live$/],
   },
 })
 ```
+
+Place `VitePWA(...)` **before** `cloudflare()` in the plugins array, for the
+same reason Tailwind goes before it: the Worker plugin should see the final
+asset set.
+
+One interaction to be aware of. The Worker serves the SPA through
+`app.get("*", c => c.env.ASSETS.fetch(c.req.raw))`, so the service worker and
+the manifest are delivered by that catch-all in production. If `sw.js` 404s
+after a deploy, the cause is `dist/` being stale — run `pnpm build` before
+`wrangler deploy`, which `pnpm deploy` already does.
 
 - [ ] **Step 3: Create the icons**
 
@@ -2387,7 +2500,10 @@ pnpm exec web-push generate-vapid-keys
 ```
 
 Add `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (a `mailto:` URL)
-to `.dev.vars` and to `worker/env.ts`.
+to `.dev.vars`, and add the three as `string` fields to the existing `Env`
+interface in `worker/env.ts` — that file imports the `LiveRoom` type and
+parameterises `DurableObjectNamespace<LiveRoom>`, so edit it rather than
+writing a fresh one.
 
 - [ ] **Step 7: Write `worker/push/send.ts`**
 
@@ -2434,7 +2550,9 @@ Implement `buildPushRequest` with the library selected in Step 6, passing
 
 - [ ] **Step 8: Add the subscribe endpoint**
 
-In `worker/routes/api.ts`:
+In `worker/routes/api.ts`. It sits inside the sub-app that already has
+`api.use("*", requireSession)`, so the guard applies with no extra work, and
+the sub-app is mounted above the SPA catch-all in `worker/index.ts`:
 
 ```ts
 import { savePushSubscription } from "../db/push";
@@ -2638,8 +2756,12 @@ test("an incoming webhook event updates the page without a reload", async ({ pag
   });
   await reloaded;
 
-  // The dev Worker's /webhook is reachable on the same origin.
-  await request.post("/webhook", {
+  // The token is a PATH segment, not a query param — posting to bare
+  // /webhook matches no route. See "What Plan 1 discovered".
+  const token = process.env.STRAVA_VERIFY_TOKEN;
+  test.skip(!token, "STRAVA_VERIFY_TOKEN must be set to exercise the webhook");
+
+  await request.post(`/webhook/${encodeURIComponent(token!)}`, {
     data: {
       object_type: "activity",
       object_id: 999_999_999,
@@ -2659,14 +2781,24 @@ test("an incoming webhook event updates the page without a reload", async ({ pag
 ```
 
 This spec requires a connected athlete and a real activity id. Set
-`E2E_ATHLETE_ID` and swap `object_id` for one of your own activity ids before
-running it; it is skipped in CI until those exist.
+`E2E_ATHLETE_ID` and `STRAVA_VERIFY_TOKEN` in the environment, and swap
+`object_id` for one of your own activity ids before running it; it skips
+itself until those exist.
+
+Note the deliberate trap this avoids: a wrong or missing path token still
+returns **200**, so asserting on the response status would pass while nothing
+was ingested. The assertion has to be on the page updating, not on the ack.
 
 - [ ] **Step 4: Add the script**
 
 ```json
 "test:e2e": "playwright test"
 ```
+
+The `webServer.command` is `pnpm dev`, which is `vite --host`. Because
+`@cloudflare/vite-plugin` runs the Worker inside that same dev server, no
+separate `wrangler dev` is needed and `baseURL` covers both the SPA and the
+API.
 
 - [ ] **Step 5: Run it**
 
