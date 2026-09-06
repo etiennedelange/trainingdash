@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "fraunces",
+        "createdAt": "2026-09-06T19:11:56.113Z",
+        "reason": "Fraunces is the light-mode ('Paper Terminal') display face, documented in DESIGN.md's Light Mode Typography callout and in .impeccable/design.json's extensions.themes.light.typography — the frontmatter only carries the default (dark) token set by design, so the detector's frontmatter-only scan can't see it."
+      }
+    ]
+  }
+}

@@ -21,9 +21,9 @@ export function Shell({
     <div className="flex min-h-screen bg-ground">
       <nav className="flex w-[220px] flex-none flex-col gap-1 border-r border-line bg-surface p-4">
         <div className="flex items-center gap-2.5 px-2 pb-6">
-          <div className="flex size-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-accent to-accent-deep">
+          <div className="flex size-8 items-center justify-center rounded-[var(--radius-control)] bg-gradient-to-br from-accent to-accent-deep">
             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="#062b26" />
+              <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="var(--color-on-accent)" />
             </svg>
           </div>
           <span className="font-display text-base font-bold">Trainingdash</span>
@@ -35,7 +35,7 @@ export function Shell({
             to={item.to}
             aria-current={activeKey === item.key ? "page" : undefined}
             className={clsx(
-              "rounded-[11px] px-3 py-2.5 text-sm font-bold transition-colors",
+              "rounded-[var(--radius-nav)] px-3 py-2.5 text-sm font-bold transition-colors",
               activeKey === item.key ? "bg-raised text-text" : "text-muted hover:bg-raised",
             )}
           >

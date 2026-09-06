@@ -2,6 +2,7 @@ import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { Shell } from "@/components/Shell";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { AccountStatus } from "@/components/AccountStatus";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 
 function RootLayout() {
@@ -14,7 +15,15 @@ function RootLayout() {
   useLiveUpdates();
 
   return (
-    <Shell activeKey={activeKey} footer={<AccountStatus />}>
+    <Shell
+      activeKey={activeKey}
+      footer={
+        <div className="flex flex-col gap-1">
+          <ThemeToggle />
+          <AccountStatus />
+        </div>
+      }
+    >
       <Outlet />
       <UpdatePrompt />
     </Shell>

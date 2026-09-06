@@ -34,7 +34,7 @@ export function EnableNotifications({ vapidPublicKey }: { vapidPublicKey: string
     <div className="flex flex-col items-start gap-1">
       <button
         onClick={() => void enable()}
-        className="rounded-[10px] border border-dashed border-line px-4 py-2 text-xs font-semibold text-muted hover:border-muted"
+        className="rounded-[var(--radius-control)] border border-dashed border-line px-4 py-2 text-xs font-semibold text-muted hover:border-muted"
       >
         Notify me when an activity lands
       </button>

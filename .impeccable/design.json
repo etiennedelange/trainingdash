@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-06T18:44:29Z",
+  "generatedAt": "2026-09-06T19:20:00Z",
   "title": "Design System: Trainingdash",
   "extensions": {
     "colorMeta": {
@@ -96,23 +96,59 @@
       "mono": { "displayName": "Mono / Readout", "purpose": "Every measurement, count, duration, and pace value, at any size." }
     },
     "shadows": [
-      { "name": "toast-float", "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)", "purpose": "The one floating element (UpdatePrompt) — never used on in-flow cards." }
+      { "name": "toast-float", "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)", "purpose": "The one floating element (UpdatePrompt) — never used on in-flow cards, in either theme." },
+      { "name": "surface (light mode only)", "value": "0 16px 32px -18px rgb(36 28 20 / 0.28), 0 2px 8px -2px rgb(36 28 20 / 0.10)", "purpose": "The `--shadow-surface` token: `none` in dark mode (Flat-by-Default), a soft warm ambient lift under every in-flow card in light mode (Paper Terminal's inverse rule)." }
     ],
     "motion": [
       { "name": "toast-in", "value": "cubic-bezier(0.2, 0.8, 0.2, 1), 0.5s, from opacity:0 translateY(-8px) scale(0.98) to opacity:1 translateY(0) scale(1)", "purpose": "Reserved entrance for the live-arrival moment; currently defined in CSS but not yet applied to a shipped component." }
     ],
     "breakpoints": [
       { "name": "sm", "value": "640px" }
-    ]
+    ],
+    "themes": {
+      "default": "dark",
+      "switch": "ThemeToggle flips document.documentElement.dataset.theme between \"dark\" and \"light\" (persisted to localStorage as trainingdash-theme); src/styles.css redefines the same --color-*/--radius-*/--shadow-surface custom property names under [data-theme=\"light\"], so every component that already reads a token is correct in both modes without its own branching.",
+      "light": {
+        "northStar": "The Paper Terminal",
+        "colors": {
+          "void-black": { "displayName": "Warm Sand", "value": "#f7f1e7", "note": "page background — lightest-to-darkest ladder direction flips vs. dark mode" },
+          "deep-panel": { "displayName": "Sidebar Tan", "value": "#efe3d1", "note": "nav background" },
+          "terminal-card": { "displayName": "Paper White", "value": "#fffdf8", "note": "card/tile/row surface" },
+          "raised-panel": { "displayName": "Raised Tan", "value": "#f1e3ce", "note": "hover/active background step" },
+          "ghost-line": { "displayName": "Ghost Line (warm)", "value": "rgb(36 28 20 / 0.09)" },
+          "readout-white": { "displayName": "Ink", "value": "#241c14", "note": "primary text" },
+          "instrument-gray": { "displayName": "Warm Umber", "value": "#786a58", "note": "picked to clear ≥4.5:1 against Paper White — deliberately darker than a naive inversion of the dark-mode lightness would give, to match dark mode's own ~5.5:1 bar for this body-grade role" },
+          "dim-gray": { "displayName": "Warm Taupe", "value": "#b7a990", "note": "tertiary/decorative only, same lower-contrast allowance dark mode already accepts for this role" },
+          "signal-teal": { "displayName": "Ember Terracotta", "value": "#d9673c" },
+          "signal-teal-deep": { "displayName": "Ember Terracotta Deep", "value": "#b14f29" },
+          "on-accent": { "displayName": "On-Accent Ink", "value": "#241c14", "note": "light-mode-only token; dark mode reuses Void Black for this because Void Black IS the dark-mode page background, a coincidence that doesn't hold in light mode" },
+          "arrival-amber": { "displayName": "Arrival Amber (light)", "value": "#f2a65a" },
+          "arrival-gold": { "displayName": "Arrival Gold (light)", "value": "#f6cf7a" },
+          "run-teal": { "displayName": "Run Terracotta", "value": "#d9673c" },
+          "strength-magenta": { "displayName": "Strength Rose", "value": "#dd7c9e" },
+          "ride-violet": { "displayName": "Ride Plum", "value": "#9c82be" },
+          "walk-blue": { "displayName": "Walk Sage Teal", "value": "#4e9c93", "note": "the one intentionally cool note against an otherwise warm palette" }
+        },
+        "typography": {
+          "display": { "fontFamily": "Fraunces, ui-serif, Georgia, serif", "note": "only the Display role's face changes; Body/Label/Mono are shared with dark mode" }
+        },
+        "rounded": { "control": "14px", "nav": "16px", "row": "18px", "tile": "20px", "card": "26px" },
+        "shadowSurface": "0 16px 32px -18px rgb(36 28 20 / 0.28), 0 2px 8px -2px rgb(36 28 20 / 0.10)",
+        "mapStyle": "https://tiles.openfreemap.org/styles/positron",
+        "invertedRules": [
+          "Flat-by-Default → Paper Lift: every in-flow surface gets --shadow-surface's soft ambient shadow in light mode; dark mode keeps it at none. This is the one place the two modes deliberately disagree rather than sharing a rule."
+        ]
+      }
+    }
   },
   "components": [
     {
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The single most important action on screen — e.g. \"Connect Strava\".",
+      "description": "The single most important action on screen — e.g. \"Connect Strava\". Colors are var()-bound to the live theme tokens, so this snippet previews correctly in both modes.",
       "html": "<button class=\"ds-btn-primary\">Connect Strava</button>",
-      "css": ".ds-btn-primary { background: #2dd4bf; color: #0b0f14; border: none; border-radius: 11px; padding: 10px 12px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: filter 0.15s; } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:focus-visible { outline: 2px solid #f1f4f7; outline-offset: 2px; }"
+      "css": ".ds-btn-primary { background: var(--color-accent); color: var(--color-on-accent); border: none; border-radius: var(--radius-nav); padding: 10px 12px; font-family: var(--font-sans); font-size: 14px; font-weight: 700; cursor: pointer; transition: filter 0.15s; } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-text); outline-offset: 2px; }"
     },
     {
       "name": "Ghost Button",
@@ -120,23 +156,23 @@
       "refersTo": "button-ghost",
       "description": "A low-commitment optional action, e.g. enabling notifications.",
       "html": "<button class=\"ds-btn-ghost\">Notify me when an activity lands</button>",
-      "css": ".ds-btn-ghost { background: transparent; color: #8792a0; border: 1px dashed rgb(255 255 255 / 0.08); border-radius: 10px; padding: 8px 16px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color 0.15s; } .ds-btn-ghost:hover { border-color: #8792a0; } .ds-btn-ghost:focus-visible { outline: 2px solid #f1f4f7; outline-offset: 2px; }"
+      "css": ".ds-btn-ghost { background: transparent; color: var(--color-muted); border: 1px dashed var(--color-line); border-radius: var(--radius-control); padding: 8px 16px; font-family: var(--font-sans); font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color 0.15s; } .ds-btn-ghost:hover { border-color: var(--color-muted); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--color-text); outline-offset: 2px; }"
     },
     {
       "name": "Stat Tile",
       "kind": "custom",
       "refersTo": "stat-tile",
-      "description": "The core metric display — a mono numeral over an uppercase caption.",
+      "description": "The core metric display — a mono numeral over an uppercase caption. Carries --shadow-surface (none in dark mode, a soft lift in light mode).",
       "html": "<div class=\"ds-stat-tile\"><div class=\"ds-stat-value\">4<span class=\"ds-stat-unit\">days</span></div><div class=\"ds-stat-label\">day streak</div></div>",
-      "css": ".ds-stat-tile { background: #141b23; border: 1px solid rgb(255 255 255 / 0.08); border-radius: 15px; padding: 16px; } .ds-stat-value { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 24px; font-weight: 700; color: #2dd4bf; } .ds-stat-unit { margin-left: 4px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 600; color: #8792a0; } .ds-stat-label { margin-top: 4px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #8792a0; }"
+      "css": ".ds-stat-tile { background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-tile); box-shadow: var(--shadow-surface); padding: 16px; } .ds-stat-value { font-family: var(--font-mono); font-size: 24px; font-weight: 700; color: var(--color-accent); } .ds-stat-unit { margin-left: 4px; font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--color-muted); } .ds-stat-label { margin-top: 4px; font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-muted); }"
     },
     {
       "name": "Activity Row",
       "kind": "custom",
       "refersTo": "activity-row",
       "description": "One record in the activity timeline — sport dot, name, mono meta.",
-      "html": "<a href=\"#\" class=\"ds-activity-row\"><span class=\"ds-sport-dot\" style=\"background:#2dd4bf\"></span><span class=\"ds-activity-name\">Morning Run</span><span class=\"ds-activity-meta\">8.2 km · 42:10 · 5:08/km</span></a>",
-      "css": ".ds-activity-row { display: flex; align-items: center; gap: 12px; background: #141b23; border: 1px solid rgb(255 255 255 / 0.08); border-radius: 13px; padding: 12px 16px; text-decoration: none; transition: background 0.15s; } .ds-activity-row:hover { background: #1d2530; } .ds-sport-dot { flex: none; width: 8px; height: 8px; border-radius: 999px; } .ds-activity-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #f1f4f7; } .ds-activity-meta { flex: none; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #8792a0; }"
+      "html": "<a href=\"#\" class=\"ds-activity-row\"><span class=\"ds-sport-dot\" style=\"background:var(--color-run)\"></span><span class=\"ds-activity-name\">Morning Run</span><span class=\"ds-activity-meta\">8.2 km · 42:10 · 5:08/km</span></a>",
+      "css": ".ds-activity-row { display: flex; align-items: center; gap: 12px; background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-row); box-shadow: var(--shadow-surface); padding: 12px 16px; text-decoration: none; transition: background 0.15s; } .ds-activity-row:hover { background: var(--color-raised); } .ds-sport-dot { flex: none; width: 8px; height: 8px; border-radius: 999px; } .ds-activity-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-sans); font-size: 14px; font-weight: 700; color: var(--color-text); } .ds-activity-meta { flex: none; font-family: var(--font-mono); font-size: 12px; color: var(--color-muted); }"
     },
     {
       "name": "Nav Item",
@@ -144,7 +180,7 @@
       "refersTo": "nav-item-active",
       "description": "Sidebar nav link, active and inactive states.",
       "html": "<a href=\"#\" class=\"ds-nav-item ds-nav-item--active\">Today</a><a href=\"#\" class=\"ds-nav-item\">Activities</a>",
-      "css": ".ds-nav-item { display: block; border-radius: 11px; padding: 10px 12px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #8792a0; text-decoration: none; transition: background 0.15s, color 0.15s; } .ds-nav-item:hover { background: #1d2530; } .ds-nav-item--active { background: #1d2530; color: #f1f4f7; }"
+      "css": ".ds-nav-item { display: block; border-radius: var(--radius-nav); padding: 10px 12px; font-family: var(--font-sans); font-size: 14px; font-weight: 700; color: var(--color-muted); text-decoration: none; transition: background 0.15s, color 0.15s; } .ds-nav-item:hover { background: var(--color-raised); } .ds-nav-item--active { background: var(--color-raised); color: var(--color-text); }"
     },
     {
       "name": "Tab",
@@ -152,46 +188,50 @@
       "refersTo": "tab-active",
       "description": "Timeline / Calendar view switcher.",
       "html": "<div role=\"tablist\" class=\"ds-tablist\"><button role=\"tab\" aria-selected=\"true\" class=\"ds-tab ds-tab--active\">Timeline</button><button role=\"tab\" aria-selected=\"false\" class=\"ds-tab\">Calendar</button></div>",
-      "css": ".ds-tablist { display: flex; gap: 8px; } .ds-tab { border: none; background: transparent; border-radius: 10px; padding: 8px 16px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 700; color: #8792a0; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-tab:hover { background: #1d2530; } .ds-tab--active { background: #1d2530; color: #f1f4f7; }"
+      "css": ".ds-tablist { display: flex; gap: 8px; } .ds-tab { border: none; background: transparent; border-radius: var(--radius-control); padding: 8px 16px; font-family: var(--font-sans); font-size: 12px; font-weight: 700; color: var(--color-muted); cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-tab:hover { background: var(--color-raised); } .ds-tab--active { background: var(--color-raised); color: var(--color-text); }"
     },
     {
       "name": "Mix Bar",
       "kind": "custom",
       "refersTo": "mix-bar-row",
       "description": "Per-sport horizontal proportion bar in the Progress view's workout-mix panel.",
-      "html": "<div class=\"ds-mixbar-row\"><span class=\"ds-mixbar-label\">Run</span><span class=\"ds-mixbar-track\"><span class=\"ds-mixbar-fill\" style=\"width:62%;background:#2dd4bf\"></span></span><span class=\"ds-mixbar-pct\">62%</span></div>",
-      "css": ".ds-mixbar-row { display: flex; align-items: center; gap: 12px; } .ds-mixbar-label { flex: none; width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 700; color: #f1f4f7; } .ds-mixbar-track { flex: 1; height: 8px; border-radius: 999px; background: #1d2530; overflow: hidden; } .ds-mixbar-fill { display: block; height: 100%; border-radius: 999px; } .ds-mixbar-pct { flex: none; width: 40px; text-align: right; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #8792a0; }"
+      "html": "<div class=\"ds-mixbar-row\"><span class=\"ds-mixbar-label\">Run</span><span class=\"ds-mixbar-track\"><span class=\"ds-mixbar-fill\" style=\"width:62%;background:var(--color-run)\"></span></span><span class=\"ds-mixbar-pct\">62%</span></div>",
+      "css": ".ds-mixbar-row { display: flex; align-items: center; gap: 12px; } .ds-mixbar-label { flex: none; width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-sans); font-size: 12px; font-weight: 700; color: var(--color-text); } .ds-mixbar-track { flex: 1; height: 8px; border-radius: 999px; background: var(--color-raised); overflow: hidden; } .ds-mixbar-fill { display: block; height: 100%; border-radius: 999px; } .ds-mixbar-pct { flex: none; width: 40px; text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--color-muted); }"
     }
   ],
   "narrative": {
     "northStar": "The Training Terminal",
-    "overview": "Trainingdash reads as a piece of instrumentation, not a lifestyle app: a near-black surface, one glowing signal color, and every number set in mono type like a raw readout rather than a decorated stat. There is no chrome for chrome's sake — the interface is a sidebar and a stack of cards, and almost all of its personality lives in four things: the depth ladder between background steps, the hairline borders, the single teal signal, and the closed four-color sport palette that repeats identically across activity dots, chart series, and the workout-mix bars.\n\nThis is a deliberate rejection of generic fitness-app cheerfulness — no bright gradients, no rounded-friendly illustration, no motivational color-pop UI. It is closer to a single-operator console: quiet by default, and the one accent color is reserved for the thing that actually matters on screen (a live streak, a CTA, the route itself).\n\nInteractive surfaces are tactile and precise: state changes read as a deliberate switch flip (background steps from card/transparent to raised-panel) rather than a soft hover fade. Nothing animates without reason — the one motion primitive currently defined (toast-in) is reserved for exactly one job: announcing that something just arrived.",
+    "overview": "Trainingdash reads as a piece of instrumentation, not a lifestyle app: a near-black surface, one glowing signal color, and every number set in mono type like a raw readout rather than a decorated stat. There is no chrome for chrome's sake — the interface is a sidebar and a stack of cards, and almost all of its personality lives in four things: the depth ladder between background steps, the hairline borders, the single teal signal, and the closed four-color sport palette that repeats identically across activity dots, chart series, and the workout-mix bars.\n\nThis is a deliberate rejection of generic fitness-app cheerfulness — no bright gradients, no rounded-friendly illustration, no motivational color-pop UI. It is closer to a single-operator console: quiet by default, and the one accent color is reserved for the thing that actually matters on screen (a live streak, a CTA, the route itself).\n\nInteractive surfaces are tactile and precise: state changes read as a deliberate switch flip (background steps from card/transparent to raised-panel) rather than a soft hover fade. Nothing animates without reason — the one motion primitive currently defined (toast-in) is reserved for exactly one job: announcing that something just arrived.\n\nA second mode, \"The Paper Terminal,\" exists alongside this one: the same instrumentation idea rendered as if printed on warm paper instead of glowing on a dark screen, switchable at runtime via ThemeToggle. Every token is a CSS custom property redefined under [data-theme=\"light\"], so the same components serve both modes without their own branching. See extensions.themes.light for its values.",
     "keyCharacteristics": [
-      "One signal color (Signal Teal) carries all \"this is active/primary\" meaning across buttons, the current streak stat, the weekly-distance bar, the calendar heatmap peak, and the route line.",
-      "Depth comes from a four-step background ladder (Void Black → Deep Panel → Terminal Card → Raised Panel) plus hairline borders — not shadows.",
-      "Every number is set in JetBrains Mono; every label is either a bold sans headline or a small uppercase mono-adjacent tag. There is no in-between.",
-      "A closed, non-negotiable four-color sport palette (Run Teal / Strength Magenta / Ride Violet / Walk Blue) is the only place color carries categorical (not just state) meaning."
+      "One signal color (Signal Teal, or Ember Terracotta in light mode) carries all \"this is active/primary\" meaning across buttons, the current streak stat, the weekly-distance bar, the calendar heatmap peak, and the route line.",
+      "Depth comes from a four-step background ladder (Void Black → Deep Panel → Terminal Card → Raised Panel) plus hairline borders — not shadows, in dark mode. Light mode inverts this on purpose: every in-flow surface additionally carries a soft ambient shadow, because \"paper\" reads as physical sheets, not glowing panels.",
+      "Every number is set in JetBrains Mono in both modes; every label is either a bold sans headline or a small uppercase mono-adjacent tag. There is no in-between.",
+      "A closed, non-negotiable four-color sport palette (Run / Strength / Ride / Walk) is the only place color carries categorical (not just state) meaning — the same four roles, re-tinted per mode.",
+      "The two modes share one token surface (--color-*, --radius-*, --shadow-surface, --font-display): a component is correct in both by reading tokens, never by branching on the current theme."
     ],
     "rules": [
-      { "name": "The One Signal Rule", "body": "Signal Teal is the only color that means \"primary / active / this matters.\" It never appears as decoration — every instance of it on screen is doing semantic work (a CTA, the current streak, the top of a chart, the route). If a new element needs emphasis, reach for Signal Teal only if that emphasis is genuinely primary; otherwise use the raised-panel background step instead.", "section": "colors" },
-      { "name": "The Closed Sport Palette Rule", "body": "The four sport colors are a fixed lookup table (Run/TrailRun, Ride/VirtualRide, Walk/Hike, WeightTraining/Workout), consumed identically by ActivityRow's dot, MixBar's fill, and the future legend of any new chart. A new sport type falls back to Instrument Gray rather than inventing a fifth color.", "section": "colors" },
-      { "name": "The All-Numbers-Are-Mono Rule", "body": "Any value that is a measurement, count, duration, or pace renders in JetBrains Mono, regardless of font size or where it sits. Sans type is reserved for labels, names, and prose.", "section": "typography" },
+      { "name": "The One Signal Rule", "body": "Signal Teal (Ember Terracotta in light mode) is the only color that means \"primary / active / this matters.\" It never appears as decoration — every instance of it on screen is doing semantic work (a CTA, the current streak, the top of a chart, the route). If a new element needs emphasis, reach for it only if that emphasis is genuinely primary; otherwise use the raised-panel background step instead.", "section": "colors" },
+      { "name": "The Closed Sport Palette Rule", "body": "The four sport colors are a fixed lookup table (Run/TrailRun, Ride/VirtualRide, Walk/Hike, WeightTraining/Workout), consumed identically by ActivityRow's dot, MixBar's fill, and the future legend of any new chart, in either mode. A new sport type falls back to Instrument Gray/Warm Umber rather than inventing a fifth color.", "section": "colors" },
+      { "name": "The All-Numbers-Are-Mono Rule", "body": "Any value that is a measurement, count, duration, or pace renders in JetBrains Mono, regardless of font size, where it sits, or which theme is active. Sans type is reserved for labels, names, and prose.", "section": "typography" },
       { "name": "The One Uppercase Rule", "body": "Uppercase + letter-spacing is reserved for StatTile captions. It does not migrate to nav items, section headers, or buttons — those stay sentence case and bold instead.", "section": "typography" },
-      { "name": "The Flat-by-Default Rule", "body": "No component gets a shadow for being \"important\" or \"elevated\" in the ordinary card/tile/row sense — use the next background step up instead. A shadow is reserved for elements that are literally floating above the page (toasts, future popovers/modals), never for in-flow cards.", "section": "elevation" }
+      { "name": "The Flat-by-Default Rule (dark mode only)", "body": "No component gets a shadow for being \"important\" or \"elevated\" in the ordinary card/tile/row sense — use the next background step up instead. A shadow is reserved for elements that are literally floating above the page (toasts, future popovers/modals), never for in-flow cards. Light mode replaces this rule with Paper Lift (see extensions.themes.light.invertedRules) — the one place the two modes deliberately disagree.", "section": "elevation" }
     ],
     "dos": [
-      "Do keep Signal Teal to a single, consistent semantic role (primary/active/current) across every surface — button, stat, chart, map alike.",
-      "Do use the background-ladder step (not a shadow) whenever a component needs to read as \"raised\" or \"focused.\"",
+      "Do keep the signal color to a single, consistent semantic role (primary/active/current) across every surface — button, stat, chart, map alike — in either mode.",
+      "Do use the background-ladder step (not a shadow) whenever a component needs to read as \"raised\" or \"focused,\" in dark mode.",
       "Do render every measurement, count, duration, and pace value in JetBrains Mono, at whatever size the context calls for.",
       "Do treat the four sport colors as a closed, fixed lookup table shared by every component that displays a sport type.",
-      "Do reserve uppercase + letter-spacing exclusively for StatTile-style meta captions."
+      "Do reserve uppercase + letter-spacing exclusively for StatTile-style meta captions.",
+      "Do style every new component through the --color-*/--radius-*/--shadow-surface custom properties, never a hardcoded hex or px radius — that is the entire mechanism keeping both modes in sync.",
+      "Do give any button or icon drawn directly on the accent color its text/glyph color from --color-on-accent, never --color-ground — this matters specifically in light mode, where ground is nearly white."
     ],
     "donts": [
-      "Don't add a shadow to an in-flow card, tile, or row — shadows are reserved for elements floating above the page (toasts, future modals/popovers).",
-      "Don't introduce a second \"primary\" accent color alongside Signal Teal, or use Signal Teal purely decoratively.",
-      "Don't invent a fifth sport color ad hoc; fall back to Instrument Gray for an unmapped sport type instead.",
-      "Don't reach for bright, rounded, \"cheerful fitness app\" visual language (illustration, gradients-as-decoration, playful iconography) — the system is a quiet instrument panel, not a lifestyle brand.",
-      "Don't repurpose Arrival Amber/Gold or the toast-in animation for anything other than the live-arrival moment they're reserved for."
+      "Don't add a shadow to an in-flow card, tile, or row in dark mode — shadows are reserved for elements floating above the page (toasts, future modals/popovers). Light mode inverts this on purpose.",
+      "Don't introduce a second \"primary\" accent color alongside the signal color, or use it purely decoratively.",
+      "Don't invent a fifth sport color ad hoc; fall back to Instrument Gray/Warm Umber for an unmapped sport type instead.",
+      "Don't reach for bright, rounded, \"cheerful fitness app\" visual language (illustration, gradients-as-decoration, playful iconography) — the system is a quiet instrument panel in either mode, not a lifestyle brand.",
+      "Don't repurpose the Arrival Amber/Gold pair or the toast-in animation for anything other than the live-arrival moment they're reserved for, in either mode.",
+      "Don't add a third theme or a per-component light/dark branch beyond the two already-justified exceptions (RouteMap's basemap URL, and the chart components' useTheme() read used only to force a recompute)."
     ]
   }
 }

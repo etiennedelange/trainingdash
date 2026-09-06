@@ -22,7 +22,7 @@ export function ActivityRow({ activity }: { activity: ActivitySummary }) {
     <Link
       to="/activity/$id"
       params={{ id: String(activity.id) }}
-      className="flex items-center gap-3 rounded-[13px] border border-line bg-card px-4 py-3 transition-colors hover:bg-raised"
+      className="flex items-center gap-3 rounded-[var(--radius-row)] border border-line bg-card px-4 py-3 shadow-[var(--shadow-surface)] transition-colors hover:bg-raised"
     >
       <span
         className={`size-2 flex-none rounded-full ${SPORT_COLOR[activity.sport_type] ?? "bg-muted"}`}

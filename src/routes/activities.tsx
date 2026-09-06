@@ -43,7 +43,7 @@ export function Activities({ today }: { today: string }) {
             aria-selected={tab === t}
             onClick={() => setTab(t)}
             className={clsx(
-              "rounded-[10px] px-4 py-2 text-xs font-bold transition-colors",
+              "rounded-[var(--radius-control)] px-4 py-2 text-xs font-bold transition-colors",
               tab === t ? "bg-raised text-text" : "text-muted hover:bg-raised",
             )}
           >

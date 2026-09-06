@@ -38,7 +38,7 @@ function ActivityDetail() {
       </div>
 
       {data.polyline ? (
-        <div className="mt-8 overflow-hidden rounded-[var(--radius-card)] border border-line">
+        <div className="mt-8 overflow-hidden rounded-[var(--radius-card)] border border-line shadow-[var(--shadow-surface)]">
           <RouteMap polyline={data.polyline} />
         </div>
       ) : (

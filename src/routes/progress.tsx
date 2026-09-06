@@ -22,14 +22,14 @@ export function Progress({ today }: { today: string }) {
 
       <section className="mt-8">
         <h2 className="mb-3 text-sm font-bold text-muted">Distance · last 8 weeks</h2>
-        <div className="rounded-[var(--radius-card)] border border-line bg-card p-4">
+        <div className="rounded-[var(--radius-card)] border border-line bg-card p-4 shadow-[var(--shadow-surface)]">
           <WeeklyDistance buckets={weeklyBuckets(data, 8, today)} />
         </div>
       </section>
 
       <section className="mt-8 max-w-md">
         <h2 className="mb-3 text-sm font-bold text-muted">Workout mix</h2>
-        <div className="rounded-[var(--radius-card)] border border-line bg-card p-5">
+        <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-[var(--shadow-surface)]">
           <MixBar slices={sportMix(data)} />
         </div>
       </section>

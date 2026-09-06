@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Map as MapLibreMap, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { decodePolyline, bounds } from "./polyline";
+import { cssVar, useTheme } from "@/hooks/useTheme";
 
-// Tile source confirmed live 2026-09-06 (200, dark background style, no account
-// needed). MapLibre ships no tiles of its own.
-const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+// Both styles confirmed live 2026-09-06 (200, no account needed). MapLibre
+// ships no tiles of its own.
+const STYLE_URL = {
+  dark: "https://tiles.openfreemap.org/styles/dark",
+  light: "https://tiles.openfreemap.org/styles/positron",
+} as const;
 
 // maplibre-gl computes its Web Worker's filename dynamically at runtime
 // (`moduleUrl.endsWith("-dev.mjs") ? ... : "maplibre-gl-worker.mjs"`), which
@@ -23,6 +27,7 @@ setWorkerUrl("/maplibre-gl-worker.mjs");
 export function RouteMap({ polyline }: { polyline: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [failed, setFailed] = useState(false);
+  const [theme] = useTheme();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -40,7 +45,7 @@ export function RouteMap({ polyline }: { polyline: string }) {
     try {
       map = new MapLibreMap({
         container: el,
-        style: STYLE_URL,
+        style: STYLE_URL[theme],
         bounds: bounds(coords),
         fitBoundsOptions: { padding: 32 },
         attributionControl: { compact: true },
@@ -67,12 +72,14 @@ export function RouteMap({ polyline }: { polyline: string }) {
         type: "line",
         source: "route",
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#2dd4bf", "line-width": 3 },
+        paint: { "line-color": cssVar("--color-accent"), "line-width": 3 },
       });
     });
 
     return () => map.remove();
-  }, [polyline]);
+    // theme rebuilds the map on toggle: MapLibre has no "swap basemap
+    // in place" primitive worth the complexity for an occasional flip.
+  }, [polyline, theme]);
 
   if (failed) {
     return (
