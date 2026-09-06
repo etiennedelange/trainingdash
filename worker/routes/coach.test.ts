@@ -92,4 +92,17 @@ describe("POST /api/coach", () => {
   it("400s a malformed today", async () => {
     expect((await post({ ...valid, today: "not-a-date" })).status).toBe(400);
   });
+
+  it("accepts a long past assistant turn (only user turns are length-capped)", async () => {
+    const longAssistantReply = "a".repeat(5000);
+    const res = await post({
+      turns: [
+        { role: "user", content: "How was my week?" },
+        { role: "assistant", content: longAssistantReply },
+        { role: "user", content: "And my longest run?" },
+      ],
+      today: "2026-09-06",
+    });
+    expect(res.status).toBe(200);
+  });
 });

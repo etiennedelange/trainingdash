@@ -147,5 +147,5 @@ the Anthropic API per question.
 The data pipeline, the dashboard, and the Coach chat screen are complete:
 OAuth, resumable backfill, webhook ingest, live push, one dashboard screen,
 and a Claude-backed coach that answers questions about your training. The
-gamification layer — streaks, levels, badges, goals, and the visual identity
-— is intentionally not built yet.
+gamification layer — streaks, levels, badges, goals — is intentionally
+not built yet.
