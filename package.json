@@ -11,7 +11,8 @@
     "typecheck": "tsc -b",
     "db:migrate:local": "wrangler d1 migrations apply stravadash --local",
     "db:migrate:remote": "wrangler d1 migrations apply stravadash --remote",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "pnpm build && wrangler deploy",
+    "webhook": "node --experimental-strip-types scripts/webhook.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",
