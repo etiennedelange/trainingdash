@@ -4,6 +4,8 @@ import type { Env } from "../env";
 import { buildAuthorizeUrl, exchangeCode, athleteAllowed } from "../strava/oauth";
 import { saveAthlete } from "../db/athlete";
 import { signSession, SESSION_COOKIE } from "../session";
+import { StravaClient } from "../strava/client";
+import { runBackfill } from "../sync/backfill";
 
 const auth = new Hono<{ Bindings: Env }>();
 
@@ -36,6 +38,13 @@ auth.get("/callback", async (c) => {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });
+
+  c.executionCtx.waitUntil(
+    (async () => {
+      const client = await StravaClient.create(c.env);
+      if (client) await runBackfill(c.env, client);
+    })().catch((err) => console.error("backfill failed", err)),
+  );
 
   return c.redirect("/", 302);
 });
