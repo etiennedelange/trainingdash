@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-06T18:44:29Z",
+  "title": "Design System: Trainingdash",
+  "extensions": {
+    "colorMeta": {
+      "void-black": {
+        "role": "neutral",
+        "displayName": "Void Black",
+        "canonical": "oklch(16% 0.012 240)",
+        "tonalRamp": ["oklch(10% 0.010 240)", "oklch(16% 0.012 240)", "oklch(22% 0.014 240)", "oklch(30% 0.016 240)", "oklch(40% 0.016 240)", "oklch(55% 0.014 240)", "oklch(72% 0.010 240)", "oklch(90% 0.006 240)"]
+      },
+      "deep-panel": {
+        "role": "neutral",
+        "displayName": "Deep Panel",
+        "canonical": "oklch(18% 0.014 240)",
+        "tonalRamp": ["oklch(11% 0.012 240)", "oklch(18% 0.014 240)", "oklch(24% 0.015 240)", "oklch(32% 0.016 240)", "oklch(42% 0.016 240)", "oklch(56% 0.014 240)", "oklch(73% 0.010 240)", "oklch(90% 0.006 240)"]
+      },
+      "terminal-card": {
+        "role": "neutral",
+        "displayName": "Terminal Card",
+        "canonical": "oklch(21% 0.014 240)",
+        "tonalRamp": ["oklch(13% 0.012 240)", "oklch(21% 0.014 240)", "oklch(27% 0.015 240)", "oklch(35% 0.016 240)", "oklch(45% 0.016 240)", "oklch(58% 0.013 240)", "oklch(74% 0.009 240)", "oklch(91% 0.005 240)"]
+      },
+      "raised-panel": {
+        "role": "neutral",
+        "displayName": "Raised Panel",
+        "canonical": "oklch(27% 0.016 240)",
+        "tonalRamp": ["oklch(15% 0.013 240)", "oklch(27% 0.016 240)", "oklch(33% 0.017 240)", "oklch(41% 0.017 240)", "oklch(50% 0.016 240)", "oklch(62% 0.013 240)", "oklch(77% 0.009 240)", "oklch(92% 0.005 240)"]
+      },
+      "readout-white": {
+        "role": "neutral",
+        "displayName": "Readout White",
+        "canonical": "oklch(96% 0.006 240)",
+        "tonalRamp": ["oklch(20% 0.010 240)", "oklch(35% 0.010 240)", "oklch(50% 0.009 240)", "oklch(64% 0.008 240)", "oklch(76% 0.007 240)", "oklch(86% 0.006 240)", "oklch(92% 0.006 240)", "oklch(96% 0.006 240)"]
+      },
+      "instrument-gray": {
+        "role": "neutral",
+        "displayName": "Instrument Gray",
+        "canonical": "oklch(63% 0.014 240)",
+        "tonalRamp": ["oklch(20% 0.010 240)", "oklch(32% 0.012 240)", "oklch(44% 0.013 240)", "oklch(53% 0.014 240)", "oklch(63% 0.014 240)", "oklch(73% 0.012 240)", "oklch(83% 0.009 240)", "oklch(92% 0.005 240)"]
+      },
+      "dim-gray": {
+        "role": "neutral",
+        "displayName": "Dim Gray",
+        "canonical": "oklch(46% 0.013 240)",
+        "tonalRamp": ["oklch(16% 0.010 240)", "oklch(26% 0.011 240)", "oklch(36% 0.012 240)", "oklch(46% 0.013 240)", "oklch(56% 0.013 240)", "oklch(68% 0.011 240)", "oklch(80% 0.008 240)", "oklch(90% 0.005 240)"]
+      },
+      "signal-teal": {
+        "role": "primary",
+        "displayName": "Signal Teal",
+        "canonical": "oklch(78% 0.135 182)",
+        "tonalRamp": ["oklch(22% 0.060 182)", "oklch(34% 0.085 182)", "oklch(46% 0.105 182)", "oklch(58% 0.120 182)", "oklch(69% 0.130 182)", "oklch(78% 0.135 182)", "oklch(87% 0.095 182)", "oklch(94% 0.045 182)"]
+      },
+      "signal-teal-deep": {
+        "role": "primary",
+        "displayName": "Signal Teal Deep",
+        "canonical": "oklch(58% 0.110 183)",
+        "tonalRamp": ["oklch(18% 0.050 183)", "oklch(28% 0.075 183)", "oklch(38% 0.095 183)", "oklch(48% 0.108 183)", "oklch(58% 0.110 183)", "oklch(69% 0.100 183)", "oklch(80% 0.070 183)", "oklch(91% 0.035 183)"]
+      },
+      "arrival-amber": {
+        "role": "accent",
+        "displayName": "Arrival Amber",
+        "canonical": "oklch(76% 0.150 43)",
+        "tonalRamp": ["oklch(24% 0.070 43)", "oklch(36% 0.100 43)", "oklch(48% 0.125 43)", "oklch(60% 0.140 43)", "oklch(70% 0.148 43)", "oklch(76% 0.150 43)", "oklch(85% 0.110 43)", "oklch(93% 0.055 43)"]
+      },
+      "arrival-gold": {
+        "role": "accent",
+        "displayName": "Arrival Gold",
+        "canonical": "oklch(89% 0.140 87)",
+        "tonalRamp": ["oklch(26% 0.070 87)", "oklch(40% 0.100 87)", "oklch(54% 0.125 87)", "oklch(67% 0.140 87)", "oklch(78% 0.145 87)", "oklch(89% 0.140 87)", "oklch(93% 0.100 87)", "oklch(97% 0.045 87)"]
+      },
+      "strength-magenta": {
+        "role": "categorical",
+        "displayName": "Strength Magenta",
+        "canonical": "oklch(72% 0.170 350)",
+        "tonalRamp": ["oklch(24% 0.080 350)", "oklch(36% 0.110 350)", "oklch(48% 0.140 350)", "oklch(60% 0.160 350)", "oklch(72% 0.170 350)", "oklch(81% 0.130 350)", "oklch(89% 0.080 350)", "oklch(95% 0.035 350)"]
+      },
+      "ride-violet": {
+        "role": "categorical",
+        "displayName": "Ride Violet",
+        "canonical": "oklch(72% 0.130 293)",
+        "tonalRamp": ["oklch(24% 0.060 293)", "oklch(36% 0.085 293)", "oklch(48% 0.105 293)", "oklch(60% 0.120 293)", "oklch(72% 0.130 293)", "oklch(81% 0.095 293)", "oklch(89% 0.060 293)", "oklch(95% 0.030 293)"]
+      },
+      "walk-blue": {
+        "role": "categorical",
+        "displayName": "Walk Blue",
+        "canonical": "oklch(70% 0.135 250)",
+        "tonalRamp": ["oklch(24% 0.065 250)", "oklch(36% 0.090 250)", "oklch(47% 0.112 250)", "oklch(58% 0.128 250)", "oklch(70% 0.135 250)", "oklch(80% 0.100 250)", "oklch(88% 0.062 250)", "oklch(95% 0.030 250)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page-level h1 only — route titles like \"Today\", \"Activities\", \"Progress\", or an activity name." },
+      "body": { "displayName": "Body", "purpose": "Default UI text — nav, buttons, section subheads, meta descriptions." },
+      "label": { "displayName": "Label", "purpose": "StatTile's uppercase caption. The system's only uppercase-tracked role." },
+      "mono": { "displayName": "Mono / Readout", "purpose": "Every measurement, count, duration, and pace value, at any size." }
+    },
+    "shadows": [
+      { "name": "toast-float", "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)", "purpose": "The one floating element (UpdatePrompt) — never used on in-flow cards." }
+    ],
+    "motion": [
+      { "name": "toast-in", "value": "cubic-bezier(0.2, 0.8, 0.2, 1), 0.5s, from opacity:0 translateY(-8px) scale(0.98) to opacity:1 translateY(0) scale(1)", "purpose": "Reserved entrance for the live-arrival moment; currently defined in CSS but not yet applied to a shipped component." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single most important action on screen — e.g. \"Connect Strava\".",
+      "html": "<button class=\"ds-btn-primary\">Connect Strava</button>",
+      "css": ".ds-btn-primary { background: #2dd4bf; color: #0b0f14; border: none; border-radius: 11px; padding: 10px 12px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: filter 0.15s; } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:focus-visible { outline: 2px solid #f1f4f7; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "A low-commitment optional action, e.g. enabling notifications.",
+      "html": "<button class=\"ds-btn-ghost\">Notify me when an activity lands</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #8792a0; border: 1px dashed rgb(255 255 255 / 0.08); border-radius: 10px; padding: 8px 16px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color 0.15s; } .ds-btn-ghost:hover { border-color: #8792a0; } .ds-btn-ghost:focus-visible { outline: 2px solid #f1f4f7; outline-offset: 2px; }"
+    },
+    {
+      "name": "Stat Tile",
+      "kind": "custom",
+      "refersTo": "stat-tile",
+      "description": "The core metric display — a mono numeral over an uppercase caption.",
+      "html": "<div class=\"ds-stat-tile\"><div class=\"ds-stat-value\">4<span class=\"ds-stat-unit\">days</span></div><div class=\"ds-stat-label\">day streak</div></div>",
+      "css": ".ds-stat-tile { background: #141b23; border: 1px solid rgb(255 255 255 / 0.08); border-radius: 15px; padding: 16px; } .ds-stat-value { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 24px; font-weight: 700; color: #2dd4bf; } .ds-stat-unit { margin-left: 4px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 600; color: #8792a0; } .ds-stat-label { margin-top: 4px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #8792a0; }"
+    },
+    {
+      "name": "Activity Row",
+      "kind": "custom",
+      "refersTo": "activity-row",
+      "description": "One record in the activity timeline — sport dot, name, mono meta.",
+      "html": "<a href=\"#\" class=\"ds-activity-row\"><span class=\"ds-sport-dot\" style=\"background:#2dd4bf\"></span><span class=\"ds-activity-name\">Morning Run</span><span class=\"ds-activity-meta\">8.2 km · 42:10 · 5:08/km</span></a>",
+      "css": ".ds-activity-row { display: flex; align-items: center; gap: 12px; background: #141b23; border: 1px solid rgb(255 255 255 / 0.08); border-radius: 13px; padding: 12px 16px; text-decoration: none; transition: background 0.15s; } .ds-activity-row:hover { background: #1d2530; } .ds-sport-dot { flex: none; width: 8px; height: 8px; border-radius: 999px; } .ds-activity-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #f1f4f7; } .ds-activity-meta { flex: none; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #8792a0; }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Sidebar nav link, active and inactive states.",
+      "html": "<a href=\"#\" class=\"ds-nav-item ds-nav-item--active\">Today</a><a href=\"#\" class=\"ds-nav-item\">Activities</a>",
+      "css": ".ds-nav-item { display: block; border-radius: 11px; padding: 10px 12px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #8792a0; text-decoration: none; transition: background 0.15s, color 0.15s; } .ds-nav-item:hover { background: #1d2530; } .ds-nav-item--active { background: #1d2530; color: #f1f4f7; }"
+    },
+    {
+      "name": "Tab",
+      "kind": "custom",
+      "refersTo": "tab-active",
+      "description": "Timeline / Calendar view switcher.",
+      "html": "<div role=\"tablist\" class=\"ds-tablist\"><button role=\"tab\" aria-selected=\"true\" class=\"ds-tab ds-tab--active\">Timeline</button><button role=\"tab\" aria-selected=\"false\" class=\"ds-tab\">Calendar</button></div>",
+      "css": ".ds-tablist { display: flex; gap: 8px; } .ds-tab { border: none; background: transparent; border-radius: 10px; padding: 8px 16px; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 700; color: #8792a0; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-tab:hover { background: #1d2530; } .ds-tab--active { background: #1d2530; color: #f1f4f7; }"
+    },
+    {
+      "name": "Mix Bar",
+      "kind": "custom",
+      "refersTo": "mix-bar-row",
+      "description": "Per-sport horizontal proportion bar in the Progress view's workout-mix panel.",
+      "html": "<div class=\"ds-mixbar-row\"><span class=\"ds-mixbar-label\">Run</span><span class=\"ds-mixbar-track\"><span class=\"ds-mixbar-fill\" style=\"width:62%;background:#2dd4bf\"></span></span><span class=\"ds-mixbar-pct\">62%</span></div>",
+      "css": ".ds-mixbar-row { display: flex; align-items: center; gap: 12px; } .ds-mixbar-label { flex: none; width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 700; color: #f1f4f7; } .ds-mixbar-track { flex: 1; height: 8px; border-radius: 999px; background: #1d2530; overflow: hidden; } .ds-mixbar-fill { display: block; height: 100%; border-radius: 999px; } .ds-mixbar-pct { flex: none; width: 40px; text-align: right; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #8792a0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Training Terminal",
+    "overview": "Trainingdash reads as a piece of instrumentation, not a lifestyle app: a near-black surface, one glowing signal color, and every number set in mono type like a raw readout rather than a decorated stat. There is no chrome for chrome's sake — the interface is a sidebar and a stack of cards, and almost all of its personality lives in four things: the depth ladder between background steps, the hairline borders, the single teal signal, and the closed four-color sport palette that repeats identically across activity dots, chart series, and the workout-mix bars.\n\nThis is a deliberate rejection of generic fitness-app cheerfulness — no bright gradients, no rounded-friendly illustration, no motivational color-pop UI. It is closer to a single-operator console: quiet by default, and the one accent color is reserved for the thing that actually matters on screen (a live streak, a CTA, the route itself).\n\nInteractive surfaces are tactile and precise: state changes read as a deliberate switch flip (background steps from card/transparent to raised-panel) rather than a soft hover fade. Nothing animates without reason — the one motion primitive currently defined (toast-in) is reserved for exactly one job: announcing that something just arrived.",
+    "keyCharacteristics": [
+      "One signal color (Signal Teal) carries all \"this is active/primary\" meaning across buttons, the current streak stat, the weekly-distance bar, the calendar heatmap peak, and the route line.",
+      "Depth comes from a four-step background ladder (Void Black → Deep Panel → Terminal Card → Raised Panel) plus hairline borders — not shadows.",
+      "Every number is set in JetBrains Mono; every label is either a bold sans headline or a small uppercase mono-adjacent tag. There is no in-between.",
+      "A closed, non-negotiable four-color sport palette (Run Teal / Strength Magenta / Ride Violet / Walk Blue) is the only place color carries categorical (not just state) meaning."
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "Signal Teal is the only color that means \"primary / active / this matters.\" It never appears as decoration — every instance of it on screen is doing semantic work (a CTA, the current streak, the top of a chart, the route). If a new element needs emphasis, reach for Signal Teal only if that emphasis is genuinely primary; otherwise use the raised-panel background step instead.", "section": "colors" },
+      { "name": "The Closed Sport Palette Rule", "body": "The four sport colors are a fixed lookup table (Run/TrailRun, Ride/VirtualRide, Walk/Hike, WeightTraining/Workout), consumed identically by ActivityRow's dot, MixBar's fill, and the future legend of any new chart. A new sport type falls back to Instrument Gray rather than inventing a fifth color.", "section": "colors" },
+      { "name": "The All-Numbers-Are-Mono Rule", "body": "Any value that is a measurement, count, duration, or pace renders in JetBrains Mono, regardless of font size or where it sits. Sans type is reserved for labels, names, and prose.", "section": "typography" },
+      { "name": "The One Uppercase Rule", "body": "Uppercase + letter-spacing is reserved for StatTile captions. It does not migrate to nav items, section headers, or buttons — those stay sentence case and bold instead.", "section": "typography" },
+      { "name": "The Flat-by-Default Rule", "body": "No component gets a shadow for being \"important\" or \"elevated\" in the ordinary card/tile/row sense — use the next background step up instead. A shadow is reserved for elements that are literally floating above the page (toasts, future popovers/modals), never for in-flow cards.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Signal Teal to a single, consistent semantic role (primary/active/current) across every surface — button, stat, chart, map alike.",
+      "Do use the background-ladder step (not a shadow) whenever a component needs to read as \"raised\" or \"focused.\"",
+      "Do render every measurement, count, duration, and pace value in JetBrains Mono, at whatever size the context calls for.",
+      "Do treat the four sport colors as a closed, fixed lookup table shared by every component that displays a sport type.",
+      "Do reserve uppercase + letter-spacing exclusively for StatTile-style meta captions."
+    ],
+    "donts": [
+      "Don't add a shadow to an in-flow card, tile, or row — shadows are reserved for elements floating above the page (toasts, future modals/popovers).",
+      "Don't introduce a second \"primary\" accent color alongside Signal Teal, or use Signal Teal purely decoratively.",
+      "Don't invent a fifth sport color ad hoc; fall back to Instrument Gray for an unmapped sport type instead.",
+      "Don't reach for bright, rounded, \"cheerful fitness app\" visual language (illustration, gradients-as-decoration, playful iconography) — the system is a quiet instrument panel, not a lifestyle brand.",
+      "Don't repurpose Arrival Amber/Gold or the toast-in animation for anything other than the live-arrival moment they're reserved for."
+    ]
+  }
+}
