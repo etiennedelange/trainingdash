@@ -1,0 +1,11 @@
+STRAVA_CLIENT_ID=
+STRAVA_CLIENT_SECRET=
+# Doubles as the webhook callback's final path segment — keep it URL-safe
+# and treat it as a secret, not a nonce.
+STRAVA_VERIFY_TOKEN=
+# openssl rand -hex 32 — signing throws if this is empty.
+SESSION_SECRET=
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:you@example.com
+ANTHROPIC_API_KEY=
