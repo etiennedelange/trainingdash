@@ -131,7 +131,7 @@ export function Activities({ today }: { today: string }) {
                 <div className="flex flex-col gap-6">
                   {timelineGroups.map((group) => (
                     <div key={group.date} id={`day-${group.date}`}>
-                      <h2 className="sticky top-0 z-10 -mx-10 border-b border-line bg-ground px-10 py-3 text-sm font-bold text-muted">
+                      <h2 className="sticky top-0 z-10 border-b border-line bg-ground py-3 text-sm font-bold text-muted">
                         {formatDayHeading(group.date, today)}
                       </h2>
                       <div className="mt-2 flex flex-col gap-2">

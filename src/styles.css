@@ -138,6 +138,72 @@ body { margin: 0; font-family: var(--font-sans); color: var(--color-text); trans
 }
 
 /*
+ * MapLibre ships its own chrome — a white attribution pill, `#0096ff` focus
+ * ring, 4px-radius control groups — that pre-dates this design system.
+ * Re-skin it from the same tokens as every other surface so the map stops
+ * speaking a second visual language on an otherwise quiet terminal.
+ */
+.route-map .maplibregl-ctrl-attrib.maplibregl-compact,
+.route-map .maplibregl-ctrl-attrib.maplibregl-compact-show {
+  background-color: var(--color-raised);
+  color: var(--color-muted);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+}
+.route-map .maplibregl-ctrl-attrib a { color: var(--color-muted); }
+.route-map .maplibregl-ctrl-attrib a:hover { color: var(--color-text); }
+.route-map .maplibregl-ctrl-attrib-button {
+  background-color: transparent;
+  background-image: none;
+  color: var(--color-muted);
+  border-radius: var(--radius-control);
+}
+.route-map .maplibregl-ctrl-attrib-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.route-map .maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-button {
+  background-color: transparent;
+}
+.route-map .maplibregl-ctrl button:focus,
+.route-map .maplibregl-ctrl-attrib-button:focus,
+.route-map .maplibregl-ctrl-group button:focus {
+  box-shadow: none;
+}
+.route-map .maplibregl-ctrl-group {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+}
+.route-map .maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-line);
+}
+
+/*
+ * MapLibre makes the canvas focusable (tabindex=0, role=region). The default
+ * focus ring's offset is clipped by the card's rounded overflow, so pull the
+ * system ring inside the canvas instead.
+ */
+.route-map canvas:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.route-map:fullscreen {
+  height: 100%;
+  border-radius: 0;
+  border: 0;
+}
+
+/*
  * Loading-state placeholder fill: a slow breathing opacity on the same
  * raised-panel step used for hover/active surfaces, so a skeleton reads as
  * "this system, mid-boot" rather than a borrowed spinner.

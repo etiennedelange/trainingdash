@@ -112,7 +112,7 @@ export function Shell({
           <span className="font-display text-sm font-bold">Trainingdash</span>
         </header>
 
-        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
+        <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
