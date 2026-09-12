@@ -9,15 +9,16 @@
 
   --color-text: #f1f4f7;
   --color-muted: #8792a0;
-  --color-faint: #5b6472;
+  --color-faint: #7a8492;
 
   --color-accent: #2dd4bf;
   --color-accent-deep: #0e9488;
   --color-on-accent: #0b0f14;
   --color-warm-from: #ff8a5c;
   --color-warm-to: #ffd166;
+  --color-danger: #f87171;
 
-  --color-run: #2dd4bf;
+  --color-run: #a3e635;
   --color-strength: #f472b6;
   --color-ride: #a78bfa;
   --color-walk: #60a5fa;
@@ -51,15 +52,16 @@
 
   --color-text: #241c14;
   --color-muted: #786a58;
-  --color-faint: #b7a990;
+  --color-faint: #7d6f59;
 
   --color-accent: #d9673c;
   --color-accent-deep: #b14f29;
   --color-on-accent: #241c14;
   --color-warm-from: #f2a65a;
   --color-warm-to: #f6cf7a;
+  --color-danger: #9f2d20;
 
-  --color-run: #d9673c;
+  --color-run: #6f9954;
   --color-strength: #dd7c9e;
   --color-ride: #9c82be;
   --color-walk: #4e9c93;
@@ -78,8 +80,74 @@
 html { background: var(--color-ground); color-scheme: dark; }
 body { margin: 0; font-family: var(--font-sans); color: var(--color-text); transition: background-color .2s ease, color .2s ease; }
 
+/*
+ * One consistent focus treatment for every interactive element, at the
+ * element's own corner radius, instead of each browser's mismatched default
+ * ring. `:focus-visible` (not `:focus`) so a mouse click never shows it.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(-8px) scale(0.98); }
   to   { opacity: 1; transform: none; }
 }
 .animate-toast-in { animation: toast-in .5s cubic-bezier(.2,.8,.2,1) both; }
+
+/*
+ * Reserved for exactly one moment: an activity landing live via the
+ * WebSocket. Spends the warm gradient DESIGN.md sets aside for arrival, as a
+ * glow that decays over ~2.5s — matched to ARRIVAL_TTL in useLiveUpdates.
+ */
+@keyframes arrival-glow {
+  0% { box-shadow: 0 0 0 2px var(--color-warm-to), 0 0 20px 1px color-mix(in srgb, var(--color-warm-from) 55%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.animate-arrival { animation: toast-in .5s cubic-bezier(.2,.8,.2,1) both, arrival-glow 2.5s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in { animation: none; }
+  .animate-arrival { animation: none; box-shadow: 0 0 0 2px var(--color-warm-to); }
+}
+
+/*
+ * The persistent shell connection dot. A slow breathing pulse says "live"
+ * without demanding attention; the arrival variant borrows the same warm
+ * gradient as .animate-arrival so the one shell-level cue and the row-level
+ * cue read as the same event, wherever the user is looking when it fires.
+ */
+@keyframes live-pulse {
+  0%, 100% { opacity: .45; }
+  50% { opacity: 1; }
+}
+.animate-live-pulse { animation: live-pulse 2.4s ease-in-out infinite; }
+
+@keyframes live-arrival-pulse {
+  0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-warm-from) 55%, transparent); }
+  50% { transform: scale(1.6); opacity: 1; box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-warm-from) 0%, transparent); }
+  100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 transparent; }
+}
+.animate-live-arrival-pulse { animation: live-arrival-pulse 1.3s ease-out 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-live-pulse { animation: none; }
+  .animate-live-arrival-pulse { animation: none; }
+}
+
+/*
+ * Loading-state placeholder fill: a slow breathing opacity on the same
+ * raised-panel step used for hover/active surfaces, so a skeleton reads as
+ * "this system, mid-boot" rather than a borrowed spinner.
+ */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: .5; }
+  50% { opacity: 1; }
+}
+.animate-skeleton-pulse { animation: skeleton-pulse 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-skeleton-pulse { animation: none; }
+}

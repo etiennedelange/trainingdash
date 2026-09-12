@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { ActivitySummary } from "./types";
-import { activeDays, computeStreak, weeklyBuckets, sportMix, totalsBetween } from "./aggregate";
+import { activeDays, computeStreak, groupByDay, weeklyBuckets, sportMix, totalsBetween } from "./aggregate";
 
 const a = (local_date: string, over: Partial<ActivitySummary> = {}): ActivitySummary => ({
   id: Math.random(),
@@ -23,6 +23,37 @@ describe("activeDays", () => {
   it("dedupes and sorts", () => {
     expect(activeDays([a("2026-09-03"), a("2026-09-01"), a("2026-09-03")]))
       .toEqual(["2026-09-01", "2026-09-03"]);
+  });
+});
+
+describe("groupByDay", () => {
+  it("chunks consecutive same-day rows without re-sorting", () => {
+    const rows = [
+      a("2026-09-06", { id: 1 }),
+      a("2026-09-06", { id: 2 }),
+      a("2026-09-04", { id: 3 }),
+    ];
+    expect(groupByDay(rows)).toEqual([
+      { date: "2026-09-06", rows: [rows[0], rows[1]] },
+      { date: "2026-09-04", rows: [rows[2]] },
+    ]);
+  });
+
+  it("returns an empty array for no activities", () => {
+    expect(groupByDay([])).toEqual([]);
+  });
+
+  it("re-opens a new group if the same day appears non-consecutively", () => {
+    const rows = [
+      a("2026-09-06", { id: 1 }),
+      a("2026-09-05", { id: 2 }),
+      a("2026-09-06", { id: 3 }),
+    ];
+    expect(groupByDay(rows)).toEqual([
+      { date: "2026-09-06", rows: [rows[0]] },
+      { date: "2026-09-05", rows: [rows[1]] },
+      { date: "2026-09-06", rows: [rows[2]] },
+    ]);
   });
 });
 

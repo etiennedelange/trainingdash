@@ -27,6 +27,11 @@ export interface SportSlice {
   pct: number;
 }
 
+export interface DayGroup {
+  date: string;
+  rows: ActivitySummary[];
+}
+
 /** Dates are YYYY-MM-DD strings throughout — never Date objects, which drag
  *  the runner's timezone into results that are already local by construction. */
 function addDays(date: string, delta: number): string {
@@ -133,6 +138,21 @@ export function sportMix(rows: ActivitySummary[]): SportSlice[] {
   }
 
   return slices.map((s, i) => ({ ...s, pct: floors[i] ?? 0 }));
+}
+
+/** Rows arrive newest-first (the API's own ORDER BY start_date DESC) and this
+ *  preserves that order — it chunks consecutive same-day rows, it never sorts. */
+export function groupByDay(rows: ActivitySummary[]): DayGroup[] {
+  const groups: DayGroup[] = [];
+  for (const row of rows) {
+    const last = groups[groups.length - 1];
+    if (last && last.date === row.local_date) {
+      last.rows.push(row);
+    } else {
+      groups.push({ date: row.local_date, rows: [row] });
+    }
+  }
+  return groups;
 }
 
 export function totalsBetween(

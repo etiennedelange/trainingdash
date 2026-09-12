@@ -1,14 +1,23 @@
+import clsx from "clsx";
 import { useTheme } from "@/hooks/useTheme";
 
-export function ThemeToggle() {
+export function ThemeToggle({ variant = "row" }: { variant?: "row" | "icon" }) {
   const [theme, setTheme] = useTheme();
   const isLight = theme === "light";
+  const label = isLight ? "Dark mode" : "Light mode";
 
   return (
     <button
       onClick={() => setTheme(isLight ? "dark" : "light")}
       aria-pressed={isLight}
-      className="flex w-full items-center gap-2.5 rounded-[var(--radius-nav)] px-3 py-2.5 text-left text-sm font-bold text-muted hover:bg-raised"
+      aria-label={variant === "icon" ? label : undefined}
+      title={variant === "icon" ? label : undefined}
+      className={clsx(
+        "flex flex-none items-center rounded-[var(--radius-control)] text-muted transition-colors",
+        variant === "icon"
+          ? "size-9 items-center justify-center border border-line bg-card shadow-2xl hover:bg-raised"
+          : "w-full gap-2.5 rounded-[var(--radius-nav)] px-3 py-2.5 text-left text-sm font-bold hover:bg-raised",
+      )}
     >
       {isLight ? (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -30,7 +39,7 @@ export function ThemeToggle() {
           />
         </svg>
       )}
-      {isLight ? "Dark mode" : "Light mode"}
+      {variant === "row" ? label : null}
     </button>
   );
 }

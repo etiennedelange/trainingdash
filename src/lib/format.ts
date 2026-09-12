@@ -18,6 +18,21 @@ export function formatPace(secondsPerKm: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+const WEEKDAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTH = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+export function formatDayHeading(localDate: string, today: string): string {
+  const date = new Date(`${localDate}T00:00:00Z`);
+  const diffDays = Math.round(
+    (new Date(`${today}T00:00:00Z`).getTime() - date.getTime()) / 86_400_000,
+  );
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return `${WEEKDAY[date.getUTCDay()]}, ${MONTH[date.getUTCMonth()]} ${date.getUTCDate()}`;
+}
+
 export function todayLocalDate(): string {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60_000;
