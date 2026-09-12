@@ -4,16 +4,19 @@ import { Route as rootRoute } from "./__root";
 import { activitiesQuery, meQuery } from "@/lib/queries";
 import { computeStreak, totalsBetween } from "#shared/aggregate";
 import { StatTile } from "@/components/StatTile";
+import { StreakReadout } from "@/components/StreakReadout";
 import { ActivityRow } from "@/components/ActivityRow";
 import { EnableNotifications } from "@/components/EnableNotifications";
+import { DataError } from "@/components/DataError";
+import { LoadingState } from "@/components/LoadingState";
 import { formatDistance, formatDuration, todayLocalDate } from "@/lib/format";
 
 export function Today({ today }: { today: string }) {
-  const { data, isPending, isError } = useQuery(activitiesQuery);
+  const { data, isPending, isError, error, refetch } = useQuery(activitiesQuery);
   const { data: me } = useQuery(meQuery);
 
-  if (isPending) return <p className="p-10 text-muted">Loading…</p>;
-  if (isError) return <p className="p-10 text-muted">Could not load activities.</p>;
+  if (isPending) return <LoadingState />;
+  if (isError) return <DataError error={error} onRetry={() => void refetch()} subject="activities" />;
 
   const streak = computeStreak(data, today);
   const weekStart = new Date(`${today}T00:00:00Z`);
@@ -30,9 +33,11 @@ export function Today({ today }: { today: string }) {
         </p>
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile label="day streak" value={String(streak.current)} accent />
-            <StatTile label="longest streak" value={String(streak.longest)} />
+          <div className="mt-6">
+            <StreakReadout current={streak.current} longest={streak.longest} />
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
             <StatTile label="this week" value={formatDistance(week.distance)} unit="km" />
             <StatTile label="time this week" value={formatDuration(week.movingTime)} />
           </div>

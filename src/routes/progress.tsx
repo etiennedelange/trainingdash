@@ -5,13 +5,15 @@ import { activitiesQuery } from "@/lib/queries";
 import { weeklyBuckets, sportMix } from "#shared/aggregate";
 import { WeeklyDistance } from "@/charts/WeeklyDistance";
 import { MixBar } from "@/components/MixBar";
+import { DataError } from "@/components/DataError";
+import { LoadingState } from "@/components/LoadingState";
 import { todayLocalDate } from "@/lib/format";
 
 export function Progress({ today }: { today: string }) {
-  const { data, isPending, isError } = useQuery(activitiesQuery);
+  const { data, isPending, isError, error, refetch } = useQuery(activitiesQuery);
 
-  if (isPending) return <p className="p-10 text-muted">Loading…</p>;
-  if (isError) return <p className="p-10 text-muted">Could not load activities.</p>;
+  if (isPending) return <LoadingState />;
+  if (isError) return <DataError error={error} onRetry={() => void refetch()} subject="activities" />;
   if (data.length === 0) {
     return <p className="p-10 text-sm text-muted">Nothing to compare yet.</p>;
   }

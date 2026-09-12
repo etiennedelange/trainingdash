@@ -16,8 +16,8 @@ const testRouter = createRouter({
   history: createMemoryHistory({ initialEntries: ["/"] }),
 });
 
-const row = (id: number, local_date: string): ActivitySummary => ({
-  id, name: `Run ${id}`, sport_type: "Run",
+const row = (id: number, local_date: string, sport_type = "Run"): ActivitySummary => ({
+  id, name: `${sport_type} ${id}`, sport_type,
   start_date: `${local_date}T10:00:00Z`, local_date,
   elapsed_time: 1800, moving_time: 1800, distance: 5000,
   total_elevation_gain: 0, average_speed: 2.78, average_heartrate: 140,
@@ -50,6 +50,28 @@ describe("Activities", () => {
 
   it("counts distinct active days, not activities", async () => {
     await mount([row(1, "2026-09-06"), row(2, "2026-09-06"), row(3, "2026-09-05")]);
+    await expect.element(page.getByTestId("active-days")).toHaveTextContent("2");
+  });
+
+  it("filters the timeline to one sport", async () => {
+    await mount([row(1, "2026-09-06", "Run"), row(2, "2026-09-06", "Ride")]);
+    await page.getByRole("button", { name: "Ride" }).click();
+    await expect.element(page.getByText("Ride 2")).toBeInTheDocument();
+    await expect.element(page.getByText("Run 1")).not.toBeInTheDocument();
+  });
+
+  it("offers to clear a filter that matches nothing, and restores the list", async () => {
+    await mount([row(1, "2026-09-06", "Run")]);
+    await page.getByRole("button", { name: "Walk" }).click();
+    await expect.element(page.getByText(/no walk activities/i)).toBeInTheDocument();
+
+    await page.getByRole("button", { name: "Show all" }).click();
+    await expect.element(page.getByText("Run 1")).toBeInTheDocument();
+  });
+
+  it("keeps the active-days stat as a lifetime total when a filter is applied", async () => {
+    await mount([row(1, "2026-09-06", "Run"), row(2, "2026-09-05", "Ride")]);
+    await page.getByRole("button", { name: "Ride" }).click();
     await expect.element(page.getByTestId("active-days")).toHaveTextContent("2");
   });
 });

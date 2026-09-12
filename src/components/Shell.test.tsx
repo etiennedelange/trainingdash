@@ -23,7 +23,7 @@ function renderWithRouter(children: React.ReactNode) {
 describe("Shell", () => {
   it("renders the brand and its children", async () => {
     renderWithRouter(<Shell><p>content</p></Shell>);
-    await expect.element(page.getByText("Trainingdash")).toBeInTheDocument();
+    await expect.element(page.getByRole("navigation", { name: "Primary" }).getByText("Trainingdash")).toBeInTheDocument();
     await expect.element(page.getByText("content")).toBeInTheDocument();
   });
 

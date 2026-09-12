@@ -14,7 +14,7 @@ colors:
   signal-teal-deep: "#0e9488"
   arrival-amber: "#ff8a5c"
   arrival-gold: "#ffd166"
-  run-teal: "#2dd4bf"
+  run-green: "#a3e635"
   strength-magenta: "#f472b6"
   ride-violet: "#a78bfa"
   walk-blue: "#60a5fa"
@@ -97,7 +97,7 @@ Interactive surfaces are tactile and precise: state changes read as a deliberate
 - One signal color (Signal Teal) carries all "this is active/primary" meaning across buttons, the current streak stat, the weekly-distance bar, the calendar heatmap peak, and the route line.
 - Depth comes from a four-step background ladder (Void Black → Deep Panel → Terminal Card → Raised Panel) plus hairline borders — not shadows.
 - Every number is set in JetBrains Mono; every label is either a bold sans headline or a small uppercase mono-adjacent tag. There is no in-between.
-- A closed, non-negotiable four-color sport palette (Run Teal / Strength Magenta / Ride Violet / Walk Blue) is the only place color carries categorical (not just state) meaning.
+- A closed, non-negotiable four-color sport palette (Run Green / Strength Magenta / Ride Violet / Walk Blue) is the only place color carries categorical (not just state) meaning.
 
 ## Colors
 
@@ -118,7 +118,7 @@ Almost monochrome by design: a four-step dark neutral ladder, one signal color, 
 - **Dim Gray** (`#5b6472`): tertiary text — the least prominent copy (helper lines, chart axis labels).
 
 ### Sport Palette (closed set — do not extend ad hoc)
-- **Run Teal** (`#2dd4bf`): Run, TrailRun. Identical value to Signal Teal — running is treated as the "home" sport.
+- **Run Green** (`#a3e635`): Run, TrailRun. Split from Signal Teal (previously identical) and pulled into yellow-green territory — not just a different value, but far enough around the hue wheel that it can't be mistaken for the signal color even at a glance.
 - **Strength Magenta** (`#f472b6`): WeightTraining, Workout.
 - **Ride Violet** (`#a78bfa`): Ride, VirtualRide.
 - **Walk Blue** (`#60a5fa`): Walk, Hike.
@@ -142,7 +142,7 @@ Same roles, warmer and inverted: a cream-paper ladder instead of a near-black on
 - **Ink** (`#241c14`) replaces Readout White as primary text.
 - **Warm Umber** (`#786a58`) replaces Instrument Gray. This value is deliberately darker than a naive light-mode inversion would suggest: Instrument Gray is load-bearing body-grade text (nav labels, activity meta, stat captions) and the system's own dark-mode contrast for that role is ~5.5:1 against its card — Warm Umber is picked to clear the same ≥4.5:1 floor against Paper White, not just to "look about right."
 - **Warm Taupe** (`#b7a990`) replaces Dim Gray, at the same lighter, decorative-only contrast level dark mode already accepts for this tertiary role (chart axis labels, the least prominent helper lines) — not held to a stricter bar than the system already sets for itself.
-- **Sport palette:** Run/TrailRun → `#d9673c` (same as the signal color, preserving "running is the home sport"); Strength/WeightTraining/Workout → Rose (`#dd7c9e`); Ride/VirtualRide → Plum (`#9c82be`); Walk/Hike → Sage Teal (`#4e9c93`), the one intentionally cool note against the warm ground.
+- **Sport palette:** Run/TrailRun → Moss Green (`#6f9954`), split from the signal color for the same reason as dark mode; Strength/WeightTraining/Workout → Rose (`#dd7c9e`); Ride/VirtualRide → Plum (`#9c82be`); Walk/Hike → Sage Teal (`#4e9c93`), the one intentionally cool note against the warm ground.
 - **Arrival Amber → Gold** (`#f2a65a` → `#f6cf7a`) stays reserved for the same not-yet-built live-arrival moment, just re-tinted lighter to sit on paper instead of void black.
 
 ## Typography

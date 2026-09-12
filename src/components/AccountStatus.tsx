@@ -19,10 +19,19 @@ export function AccountStatus() {
     return (
       <a
         href="/auth/login"
-        className="block rounded-[var(--radius-nav)] px-3 py-2.5 text-center text-sm font-bold text-on-accent"
+        className="flex items-center justify-center gap-1.5 rounded-[var(--radius-nav)] px-3 py-2.5 text-center text-sm font-bold text-on-accent"
         style={{ background: "var(--color-accent)" }}
       >
         Connect Strava
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M7 17 17 7M9 7h8v8"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </a>
     );
   }
