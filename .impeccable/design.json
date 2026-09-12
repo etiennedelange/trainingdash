@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-06T19:20:00Z",
+  "generatedAt": "2026-09-12T22:19:17Z",
   "title": "Design System: Trainingdash",
   "extensions": {
     "colorMeta": {
@@ -43,8 +43,8 @@
       "dim-gray": {
         "role": "neutral",
         "displayName": "Dim Gray",
-        "canonical": "oklch(46% 0.013 240)",
-        "tonalRamp": ["oklch(16% 0.010 240)", "oklch(26% 0.011 240)", "oklch(36% 0.012 240)", "oklch(46% 0.013 240)", "oklch(56% 0.013 240)", "oklch(68% 0.011 240)", "oklch(80% 0.008 240)", "oklch(90% 0.005 240)"]
+        "canonical": "oklch(61% 0.024 257)",
+        "tonalRamp": ["oklch(15% 0.014 257)", "oklch(26% 0.024 257)", "oklch(37% 0.024 257)", "oklch(48% 0.024 257)", "oklch(58% 0.024 257)", "oklch(68% 0.024 257)", "oklch(80% 0.024 257)", "oklch(92% 0.012 257)"]
       },
       "signal-teal": {
         "role": "primary",
@@ -70,6 +70,12 @@
         "canonical": "oklch(89% 0.140 87)",
         "tonalRamp": ["oklch(26% 0.070 87)", "oklch(40% 0.100 87)", "oklch(54% 0.125 87)", "oklch(67% 0.140 87)", "oklch(78% 0.145 87)", "oklch(89% 0.140 87)", "oklch(93% 0.100 87)", "oklch(97% 0.045 87)"]
       },
+      "run-green": {
+        "role": "categorical",
+        "displayName": "Run Green",
+        "canonical": "oklch(85% 0.207 129)",
+        "tonalRamp": ["oklch(15% 0.124 129)", "oklch(26% 0.207 129)", "oklch(37% 0.207 129)", "oklch(48% 0.207 129)", "oklch(58% 0.207 129)", "oklch(68% 0.207 129)", "oklch(80% 0.207 129)", "oklch(92% 0.103 129)"]
+      },
       "strength-magenta": {
         "role": "categorical",
         "displayName": "Strength Magenta",
@@ -87,6 +93,12 @@
         "displayName": "Walk Blue",
         "canonical": "oklch(70% 0.135 250)",
         "tonalRamp": ["oklch(24% 0.065 250)", "oklch(36% 0.090 250)", "oklch(47% 0.112 250)", "oklch(58% 0.128 250)", "oklch(70% 0.135 250)", "oklch(80% 0.100 250)", "oklch(88% 0.062 250)", "oklch(95% 0.030 250)"]
+      },
+      "danger-red": {
+        "role": "semantic",
+        "displayName": "Danger Red",
+        "canonical": "oklch(71% 0.166 22)",
+        "tonalRamp": ["oklch(15% 0.100 22)", "oklch(26% 0.166 22)", "oklch(37% 0.166 22)", "oklch(48% 0.166 22)", "oklch(58% 0.166 22)", "oklch(68% 0.166 22)", "oklch(80% 0.166 22)", "oklch(92% 0.083 22)"]
       }
     },
     "typographyMeta": {
@@ -118,13 +130,14 @@
           "ghost-line": { "displayName": "Ghost Line (warm)", "value": "rgb(36 28 20 / 0.09)" },
           "readout-white": { "displayName": "Ink", "value": "#241c14", "note": "primary text" },
           "instrument-gray": { "displayName": "Warm Umber", "value": "#786a58", "note": "picked to clear ≥4.5:1 against Paper White — deliberately darker than a naive inversion of the dark-mode lightness would give, to match dark mode's own ~5.5:1 bar for this body-grade role" },
-          "dim-gray": { "displayName": "Warm Taupe", "value": "#b7a990", "note": "tertiary/decorative only, same lower-contrast allowance dark mode already accepts for this role" },
+          "dim-gray": { "displayName": "Warm Taupe", "value": "#7d6f59", "note": "held to the same ≥4.5:1 floor as Warm Umber because this token carries real body-grade text (Coach's status line, the iOS caveat), not just decorative chart labels" },
+          "danger-red": { "displayName": "Ember Red", "value": "#9f2d20", "note": "re-tinted dark enough to clear contrast against Paper White" },
           "signal-teal": { "displayName": "Ember Terracotta", "value": "#d9673c" },
           "signal-teal-deep": { "displayName": "Ember Terracotta Deep", "value": "#b14f29" },
           "on-accent": { "displayName": "On-Accent Ink", "value": "#241c14", "note": "light-mode-only token; dark mode reuses Void Black for this because Void Black IS the dark-mode page background, a coincidence that doesn't hold in light mode" },
           "arrival-amber": { "displayName": "Arrival Amber (light)", "value": "#f2a65a" },
           "arrival-gold": { "displayName": "Arrival Gold (light)", "value": "#f6cf7a" },
-          "run-teal": { "displayName": "Run Terracotta", "value": "#d9673c" },
+          "run-green": { "displayName": "Moss Green", "value": "#6f9954", "note": "split from the signal color for the same reason as dark mode" },
           "strength-magenta": { "displayName": "Strength Rose", "value": "#dd7c9e" },
           "ride-violet": { "displayName": "Ride Plum", "value": "#9c82be" },
           "walk-blue": { "displayName": "Walk Sage Teal", "value": "#4e9c93", "note": "the one intentionally cool note against an otherwise warm palette" }
@@ -229,6 +242,7 @@
       "Don't add a shadow to an in-flow card, tile, or row in dark mode — shadows are reserved for elements floating above the page (toasts, future modals/popovers). Light mode inverts this on purpose.",
       "Don't introduce a second \"primary\" accent color alongside the signal color, or use it purely decoratively.",
       "Don't invent a fifth sport color ad hoc; fall back to Instrument Gray/Warm Umber for an unmapped sport type instead.",
+      "Don't borrow a sport-palette color for a non-sport meaning (an error, a warning) — use Danger Red (Ember Red in light mode) instead. A categorical color and a semantic one shouldn't share a value.",
       "Don't reach for bright, rounded, \"cheerful fitness app\" visual language (illustration, gradients-as-decoration, playful iconography) — the system is a quiet instrument panel in either mode, not a lifestyle brand.",
       "Don't repurpose the Arrival Amber/Gold pair or the toast-in animation for anything other than the live-arrival moment they're reserved for, in either mode.",
       "Don't add a third theme or a per-component light/dark branch beyond the two already-justified exceptions (RouteMap's basemap URL, and the chart components' useTheme() read used only to force a recompute)."

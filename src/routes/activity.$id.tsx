@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Route as rootRoute } from "./__root";
 import { activityQuery } from "@/lib/queries";
 import { RouteMap } from "@/map/RouteMap";
+import { parsePolyline } from "@/map/polyline";
 import { StatTile } from "@/components/StatTile";
 import { DataError } from "@/components/DataError";
 import { LoadingState } from "@/components/LoadingState";
@@ -16,9 +17,10 @@ function ActivityDetail() {
   if (isError) return <DataError error={error} onRetry={() => void refetch()} subject="this activity" />;
 
   const pace = data.distance > 0 ? data.moving_time / (data.distance / 1000) : Number.NaN;
+  const hasRoute = data.polyline ? parsePolyline(data.polyline).length >= 2 : false;
 
   return (
-    <div className="p-10">
+    <div className="flex min-h-full flex-col p-10">
       <Link to="/" className="text-xs font-bold text-muted hover:text-text">
         ← Back to Today
       </Link>
@@ -44,19 +46,19 @@ function ActivityDetail() {
         />
       </div>
 
-      {data.polyline ? (
-        <div
-          role="img"
-          aria-label={`Route map for ${data.name}`}
-          className="mt-8 overflow-hidden rounded-[var(--radius-card)] border border-line shadow-[var(--shadow-surface)]"
-        >
-          <RouteMap polyline={data.polyline} />
-        </div>
-      ) : (
-        <div className="mt-8 flex h-[320px] items-center justify-center rounded-[var(--radius-card)] border border-line bg-card p-4 text-sm text-muted shadow-[var(--shadow-surface)]">
-          No route recorded for this activity.
-        </div>
-      )}
+      <figure className="mt-8 flex min-h-[320px] flex-1 flex-col">
+        <RouteMap
+          polyline={data.polyline}
+          label={`Route map for ${data.name}`}
+          emptyMessage="No route recorded for this activity."
+        />
+        {hasRoute ? (
+          <figcaption className="sr-only">
+            Route map for {data.name}: {formatDistance(data.distance)} over{" "}
+            {formatDuration(data.moving_time)}.
+          </figcaption>
+        ) : null}
+      </figure>
     </div>
   );
 }
