@@ -31,6 +31,15 @@ sudo apt-get update
 sudo apt-get install -y "$CHROME_DEB"
 rm -f "$CHROME_DEB"
 
+# ─── cloudflared ────────────────────────────────────────────────────────────────
+# Needed for `pnpm tunnel` — exposes the local dev server over public HTTPS so
+# Strava's webhook can reach it (see README's "Webhooks in development").
+echo "--> Installing cloudflared..."
+CLOUDFLARED_DEB=$(mktemp --suffix=.deb)
+curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o "$CLOUDFLARED_DEB"
+sudo apt-get install -y "$CLOUDFLARED_DEB"
+rm -f "$CLOUDFLARED_DEB"
+
 # ─── chrome-devtools-mcp ────────────────────────────────────────────────────────
 # Registered in .mcp.json; pre-fetch the package so the first `claude` launch
 # doesn't pay the npx download cost.
