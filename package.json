@@ -18,6 +18,7 @@
     "me": "node --experimental-strip-types scripts/me.ts",
     "db:wipe-athlete": "node --experimental-strip-types scripts/db-wipe-athlete.ts",
     "lock-athlete": "node --experimental-strip-types scripts/lock-athlete.ts",
+    "whoami": "node --experimental-strip-types scripts/whoami.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
