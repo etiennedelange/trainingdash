@@ -16,6 +16,8 @@
     "mock-webhook": "node --experimental-strip-types scripts/mock-webhook.ts",
     "tunnel": "cloudflared tunnel --url http://localhost:5173",
     "me": "node --experimental-strip-types scripts/me.ts",
+    "db:wipe-athlete": "node --experimental-strip-types scripts/db-wipe-athlete.ts",
+    "lock-athlete": "node --experimental-strip-types scripts/lock-athlete.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
