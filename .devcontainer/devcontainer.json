@@ -21,6 +21,11 @@
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteUser": "node",
+  "mounts": [
+    "source=trainingdash-opencode-data,target=/home/node/.local/share/opencode,type=volume",
+    "source=trainingdash-opencode-config,target=/home/node/.config/opencode,type=volume",
+    "source=trainingdash-opencode-state,target=/home/node/.local/state/opencode,type=volume"
+  ],
   "forwardPorts": [
     5173
   ],

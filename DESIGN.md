@@ -9,11 +9,12 @@ colors:
   ghost-line: "rgb(255 255 255 / 0.08)"
   readout-white: "#f1f4f7"
   instrument-gray: "#8792a0"
-  dim-gray: "#5b6472"
+  dim-gray: "#7a8492"
   signal-teal: "#2dd4bf"
   signal-teal-deep: "#0e9488"
   arrival-amber: "#ff8a5c"
   arrival-gold: "#ffd166"
+  danger-red: "#f87171"
   run-green: "#a3e635"
   strength-magenta: "#f472b6"
   ride-violet: "#a78bfa"
@@ -115,13 +116,16 @@ Almost monochrome by design: a four-step dark neutral ladder, one signal color, 
 - **Ghost Line** (`rgb(255 255 255 / 0.08)`): the hairline border used on every card, tile, row, and panel edge. This is the system's only border color.
 - **Readout White** (`#f1f4f7`): primary text and stat values.
 - **Instrument Gray** (`#8792a0`): secondary text — labels, meta lines, inactive nav/tab text.
-- **Dim Gray** (`#5b6472`): tertiary text — the least prominent copy (helper lines, chart axis labels).
+- **Dim Gray** (`#7a8492`): tertiary text — the least prominent copy (helper lines, chart axis labels), and substantive-but-secondary copy like Coach's "Thinking…" status and the iOS notification caveat. Picked to clear 4.5:1 against Terminal Card — this token carries real body-grade text, not purely decorative labels, so it holds the same contrast floor as Instrument Gray rather than a looser one.
 
 ### Sport Palette (closed set — do not extend ad hoc)
 - **Run Green** (`#a3e635`): Run, TrailRun. Split from Signal Teal (previously identical) and pulled into yellow-green territory — not just a different value, but far enough around the hue wheel that it can't be mistaken for the signal color even at a glance.
 - **Strength Magenta** (`#f472b6`): WeightTraining, Workout.
 - **Ride Violet** (`#a78bfa`): Ride, VirtualRide.
 - **Walk Blue** (`#60a5fa`): Walk, Hike.
+
+### Semantic
+- **Danger Red** (`#f87171`): the system's one error/failure color, currently used for Coach's inline error line. Introduced specifically so error text would stop borrowing Strength Magenta from the closed sport palette — a categorical color has no business also meaning "something went wrong." Reserved for genuine failure states; not a second accent.
 
 ### Reserved
 - **Arrival Amber → Arrival Gold** (`#ff8a5c` → `#ffd166`): a warm gradient pair declared in the token set but not yet applied to any shipped component. It reads as earmarked for the live-arrival moment (an activity landing via the webhook/WebSocket path) — the one place a warm, urgent color would make sense against an otherwise cold-and-quiet palette. Do not repurpose it for anything else; wire it up or leave it reserved.
@@ -141,7 +145,8 @@ Same roles, warmer and inverted: a cream-paper ladder instead of a near-black on
 - **Paper White** (`#fffdf8`), **Warm Sand** (`#f7f1e7`), **Sidebar Tan** (`#efe3d1`), **Raised Tan** (`#f1e3ce`) replace the Terminal Card → Void Black ladder, lightest-to-card rather than darkest-to-card: Paper White is the card surface, Warm Sand the page, Sidebar Tan the nav, Raised Tan the hover/active step.
 - **Ink** (`#241c14`) replaces Readout White as primary text.
 - **Warm Umber** (`#786a58`) replaces Instrument Gray. This value is deliberately darker than a naive light-mode inversion would suggest: Instrument Gray is load-bearing body-grade text (nav labels, activity meta, stat captions) and the system's own dark-mode contrast for that role is ~5.5:1 against its card — Warm Umber is picked to clear the same ≥4.5:1 floor against Paper White, not just to "look about right."
-- **Warm Taupe** (`#b7a990`) replaces Dim Gray, at the same lighter, decorative-only contrast level dark mode already accepts for this tertiary role (chart axis labels, the least prominent helper lines) — not held to a stricter bar than the system already sets for itself.
+- **Warm Taupe** (`#7d6f59`) replaces Dim Gray, held to the same ≥4.5:1 floor as Warm Umber for the same reason: this token carries real body-grade text (Coach's status line, the iOS caveat), not just decorative chart labels.
+- **Ember Red** (`#9f2d20`) replaces Danger Red as the one error/failure color, re-tinted dark enough to clear contrast against Paper White.
 - **Sport palette:** Run/TrailRun → Moss Green (`#6f9954`), split from the signal color for the same reason as dark mode; Strength/WeightTraining/Workout → Rose (`#dd7c9e`); Ride/VirtualRide → Plum (`#9c82be`); Walk/Hike → Sage Teal (`#4e9c93`), the one intentionally cool note against the warm ground.
 - **Arrival Amber → Gold** (`#f2a65a` → `#f6cf7a`) stays reserved for the same not-yet-built live-arrival moment, just re-tinted lighter to sit on paper instead of void black.
 
@@ -239,6 +244,7 @@ No structural change: the same one-data-color rule, the same heatmap-ramps-to-th
 - **Don't** add a shadow to an in-flow card, tile, or row in dark mode — shadows are reserved for elements floating above the page (toasts, future modals/popovers). Light mode inverts this on purpose (see Elevation & Depth's Light Mode callout); that inversion is the one place the two modes deliberately disagree.
 - **Don't** introduce a second "primary" accent color alongside Signal Teal (or Ember Terracotta in light mode), or use it purely decoratively.
 - **Don't** invent a fifth sport color ad hoc; fall back to Instrument Gray/Warm Umber for an unmapped sport type instead.
+- **Don't** borrow a sport-palette color for a non-sport meaning (an error, a warning) — use Danger Red (Ember Red in light mode) instead. A categorical color and a semantic one shouldn't share a value.
 - **Don't** reach for bright, rounded, "cheerful fitness app" visual language (illustration, gradients-as-decoration, playful iconography) — the system is a quiet instrument panel in either mode, not a lifestyle brand.
 - **Don't** repurpose the Arrival Amber/Gold pair or the `toast-in` animation for anything other than the live-arrival moment they're reserved for, in either mode.
 - **Don't** add a third theme or a per-component light/dark branch. The two-mode system is closed: extend it by adjusting the token values under `[data-theme="light"]` in `src/styles.css`, never by writing `theme === "light" ? ... : ...` inside a component beyond the two already-justified exceptions (`RouteMap`'s basemap URL, which is a canvas asset with no CSS equivalent, and `WeeklyDistance`/`ActivityCalendar`'s `useTheme()` read, which exists only to force an ECharts option recompute).
