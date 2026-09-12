@@ -17,6 +17,22 @@ rm -f "$CLAUDE_INSTALL"
 [ -f /tmp/.claude_creds_backup ]  && mv /tmp/.claude_creds_backup  "$CLAUDE_CREDS"
 [ -f /tmp/.claude_config_backup ] && mv /tmp/.claude_config_backup "$CLAUDE_CONFIG"
 
+# ─── OpenCode CLI ───────────────────────────────────────────────────────────────
+# Always reinstall the binary to stay current. Sessions, auth, and config live in
+# the mounted volumes declared in devcontainer.json, so they survive rebuilds.
+echo "--> Preparing OpenCode persistent state..."
+mkdir -p "$HOME/.local/share/opencode" "$HOME/.config/opencode" "$HOME/.local/state/opencode"
+sudo chown -R "$(id -u):$(id -g)" \
+  "$HOME/.local/share/opencode" \
+  "$HOME/.config/opencode" \
+  "$HOME/.local/state/opencode"
+
+echo "--> Installing OpenCode CLI..."
+OPENCODE_INSTALL=$(mktemp)
+curl -fsSL https://opencode.ai/install -o "$OPENCODE_INSTALL"
+bash "$OPENCODE_INSTALL"
+rm -f "$OPENCODE_INSTALL"
+
 # ─── Project dependencies ───────────────────────────────────────────────────────
 echo "--> Installing project dependencies..."
 pnpm install
