@@ -14,6 +14,8 @@
     "deploy": "pnpm build && wrangler deploy",
     "webhook": "node --experimental-strip-types scripts/webhook.ts",
     "mock-webhook": "node --experimental-strip-types scripts/mock-webhook.ts",
+    "tunnel": "cloudflared tunnel --url http://localhost:5173",
+    "me": "node --experimental-strip-types scripts/me.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -77,12 +77,18 @@ imports in the background.
 Strava must reach your callback over public HTTPS, so expose the dev server:
 
 ```bash
-cloudflared tunnel --url http://localhost:5173
+pnpm tunnel     # cloudflared tunnel --url http://localhost:5173
 node scripts/webhook.ts create https://<tunnel-host>/webhook
 ```
 
 Strava allows exactly one subscription per application — use
 `node scripts/webhook.ts list` and `... delete <id>` to manage it.
+
+`pnpm me` hits `GET /api/me` on the dev server (connection state, backfill
+progress, VAPID key) without a browser — it self-signs a session cookie from
+`SESSION_SECRET`, since `getAthlete` returns the single connected athlete row
+regardless of which id the cookie carries. Pass a tunnel URL to check it
+through the tunnel: `pnpm me https://<tunnel-host>`.
 
 Strava has no mock/sandbox service for webhook events; its own docs say to
 POST a synthetic payload to your callback directly. `scripts/mock-webhook.ts`
