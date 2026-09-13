@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { Today } from "./index";
 import type { ActivitySummary } from "#shared/types";
+import { HeroArrivalContext } from "@/hooks/useLiveUpdates";
 
 const testRouter = createRouter({
   routeTree: createRootRoute(),
@@ -26,13 +27,21 @@ const rows: ActivitySummary[] = [
   },
 ];
 
-function mount(data: ActivitySummary[]) {
+function mount(
+  data: ActivitySummary[],
+  hero: { activity: ActivitySummary | null; dismiss: () => void } = {
+    activity: null,
+    dismiss: () => {},
+  },
+) {
   const client = new QueryClient();
   client.setQueryData(["activities"], data);
   return render(
     <RouterContextProvider router={testRouter}>
       <QueryClientProvider client={client}>
-        <Today today="2026-09-06" />
+        <HeroArrivalContext.Provider value={hero}>
+          <Today today="2026-09-06" />
+        </HeroArrivalContext.Provider>
       </QueryClientProvider>
     </RouterContextProvider>,
   );
@@ -55,5 +64,12 @@ describe("Today", () => {
   it("shows an empty state when nothing has been imported", async () => {
     await mount([]);
     await expect.element(page.getByText(/no activities yet/i)).toBeInTheDocument();
+  });
+
+  it("counts a just-arrived activity into this week even before the refetch lands", async () => {
+    // The cache is empty, but the socket has already delivered the new row —
+    // Today merges it in, so the this-week stat is immediately correct.
+    await mount([], { activity: rows[0]!, dismiss: vi.fn() });
+    await expect.element(page.getByText(/6\.42/).first()).toBeInTheDocument();
   });
 });

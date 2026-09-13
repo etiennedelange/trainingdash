@@ -1,7 +1,7 @@
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import type { LiveMessage } from "#shared/types";
-import { queryKeys } from "@/lib/queries";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ActivityRow, ActivitySummary, LiveMessage } from "#shared/types";
+import { meQuery, queryKeys } from "@/lib/queries";
 
 const MAX_BACKOFF = 30_000;
 
@@ -16,15 +16,34 @@ const ARRIVAL_TTL = 2_600;
  */
 export function useLiveUpdates(): {
   connected: boolean;
+  authenticated: boolean;
   arrivedIds: Set<number>;
   lastArrivalName: string | null;
+  heroArrival: ActivityRow | null;
+  dismissHero: () => void;
 } {
   const queryClient = useQueryClient();
+  // /live always 401s pre-login, so there is no point opening (and
+  // endlessly retrying) the socket until a session exists — this also
+  // stops the indicator from reading "Reconnecting…" while logged out.
+  const { isSuccess: authenticated } = useQuery(meQuery);
   const [connected, setConnected] = useState(false);
   const [arrivedIds, setArrivedIds] = useState<Set<number>>(() => new Set());
   const [lastArrivalName, setLastArrivalName] = useState<string | null>(null);
+  // Unlike arrivedIds/lastArrivalName (which expire after ARRIVAL_TTL to drive
+  // the row-level glow), this persists until the athlete dismisses it or
+  // leaves the page — it backs the Today page's result hero, not a toast. It
+  // holds the full socket-payload row so the hero renders the instant the
+  // message arrives, without waiting on the refetch that keeps the cache honest.
+  const [heroArrival, setHeroArrival] = useState<ActivityRow | null>(null);
+  const dismissHero = () => setHeroArrival(null);
 
   useEffect(() => {
+    if (!authenticated) {
+      setConnected(false);
+      return;
+    }
+
     let socket: WebSocket | null = null;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let backoff = 1000;
@@ -57,6 +76,7 @@ export function useLiveUpdates(): {
           const id = msg.activity.id;
           setArrivedIds((prev) => new Set(prev).add(id));
           setLastArrivalName(msg.activity.name);
+          setHeroArrival(msg.activity);
           setTimeout(() => {
             if (disposed) return;
             setArrivedIds((prev) => {
@@ -94,15 +114,27 @@ export function useLiveUpdates(): {
       if (timer) clearTimeout(timer);
       socket?.close();
     };
-  }, [queryClient]);
+  }, [queryClient, authenticated]);
 
-  return { connected, arrivedIds, lastArrivalName };
+  return { connected, authenticated, arrivedIds, lastArrivalName, heroArrival, dismissHero };
 }
 
 const LiveArrivalsContext = createContext<Set<number>>(new Set());
-const LiveStatusContext = createContext<{ connected: boolean; lastArrivalName: string | null }>({
+const LiveStatusContext = createContext<{
+  connected: boolean;
+  authenticated: boolean;
+  lastArrivalName: string | null;
+}>({
   connected: false,
+  authenticated: false,
   lastArrivalName: null,
+});
+export const HeroArrivalContext = createContext<{
+  activity: ActivitySummary | null;
+  dismiss: () => void;
+}>({
+  activity: null,
+  dismiss: () => {},
 });
 
 /**
@@ -112,11 +144,20 @@ const LiveStatusContext = createContext<{ connected: boolean; lastArrivalName: s
  * every route re-deriving its own socket connection.
  */
 export function LiveArrivalsProvider({ children }: { children: ReactNode }) {
-  const { connected, arrivedIds, lastArrivalName } = useLiveUpdates();
+  const { connected, authenticated, arrivedIds, lastArrivalName, heroArrival, dismissHero } =
+    useLiveUpdates();
   return createElement(
     LiveStatusContext.Provider,
-    { value: { connected, lastArrivalName } },
-    createElement(LiveArrivalsContext.Provider, { value: arrivedIds }, children),
+    { value: { connected, authenticated, lastArrivalName } },
+    createElement(
+      LiveArrivalsContext.Provider,
+      { value: arrivedIds },
+      createElement(
+        HeroArrivalContext.Provider,
+        { value: { activity: heroArrival, dismiss: dismissHero } },
+        children,
+      ),
+    ),
   );
 }
 
@@ -129,7 +170,17 @@ export function useHasLiveArrival(): boolean {
   return useContext(LiveArrivalsContext).size > 0;
 }
 
-/** Live-socket connection state and the name of the most recently arrived activity, if any. */
-export function useLiveStatus(): { connected: boolean; lastArrivalName: string | null } {
+/** Live-socket connection state, whether a session exists at all, and the
+ *  name of the most recently arrived activity, if any. */
+export function useLiveStatus(): {
+  connected: boolean;
+  authenticated: boolean;
+  lastArrivalName: string | null;
+} {
   return useContext(LiveStatusContext);
+}
+
+/** The activity backing the Today page's result hero, if any, and a way to dismiss it. */
+export function useHeroArrival(): { activity: ActivitySummary | null; dismiss: () => void } {
+  return useContext(HeroArrivalContext);
 }

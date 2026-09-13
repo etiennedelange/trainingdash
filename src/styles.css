@@ -80,6 +80,11 @@
 html { background: var(--color-ground); color-scheme: dark; }
 body { margin: 0; font-family: var(--font-sans); color: var(--color-text); transition: background-color .2s ease, color .2s ease; }
 
+/* Tailwind v4's preflight dropped v3's button { cursor: pointer } reset, so
+ * every <button> here defaults to the browser's cursor: default — restore
+ * the pointer for any enabled button/role=button, app-wide. */
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: pointer; }
+
 /*
  * One consistent focus treatment for every interactive element, at the
  * element's own corner radius, instead of each browser's mismatched default

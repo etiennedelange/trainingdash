@@ -8,7 +8,16 @@ import { useLiveStatus } from "@/hooks/useLiveUpdates";
  * activity lands, wherever in the app you're looking when it happens.
  */
 export function LiveIndicator() {
-  const { connected, lastArrivalName } = useLiveStatus();
+  const { connected, authenticated, lastArrivalName } = useLiveStatus();
+
+  if (!authenticated) {
+    return (
+      <div className="flex items-center gap-2 px-2 py-1 text-[11px] font-semibold text-muted">
+        <span aria-hidden="true" className="size-1.5 flex-none rounded-full bg-faint" />
+        <span>Not connected</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 px-2 py-1 text-[11px] font-semibold text-muted">

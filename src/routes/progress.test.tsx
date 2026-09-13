@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -23,6 +23,8 @@ function mount(data: ActivitySummary[]) {
   );
 }
 
+beforeEach(() => localStorage.clear());
+
 describe("Progress", () => {
   it("renders a mix row per sport with its percentage", async () => {
     await mount([
@@ -38,5 +40,16 @@ describe("Progress", () => {
   it("shows an empty state with no data", async () => {
     await mount([]);
     await expect.element(page.getByText(/nothing to compare yet/i)).toBeInTheDocument();
+  });
+
+  it("sets a weekly goal and shows this-week progress toward it", async () => {
+    await mount([
+      row(1, "2026-09-06", "Run"), // 5 km in the current week
+      row(2, "2026-08-25", "Run"), // a prior week
+    ]);
+    await page.getByRole("spinbutton", { name: "Weekly distance goal in kilometres" }).fill("10");
+    await page.getByRole("button", { name: "Set" }).click();
+    await expect.element(page.getByText(/5\.00 km/)).toBeInTheDocument();
+    await expect.element(page.getByText(/10 km/)).toBeInTheDocument();
   });
 });
