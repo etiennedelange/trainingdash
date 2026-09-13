@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { ActivitySummary } from "./types";
-import { activeDays, computeStreak, groupByDay, weeklyBuckets, sportMix, totalsBetween } from "./aggregate";
+import { activeDays, computeStreak, groupByDay, weeklyBuckets, weeklyLoad, weekComparison, sportMix, totalsBetween } from "./aggregate";
 
 const a = (local_date: string, over: Partial<ActivitySummary> = {}): ActivitySummary => ({
   id: Math.random(),
@@ -119,6 +119,73 @@ describe("weeklyBuckets", () => {
   it("ignores activities older than the window", () => {
     const buckets = weeklyBuckets([a("2020-01-01", { distance: 9999 })], 2, "2026-09-06");
     expect(buckets.reduce((n, b) => n + b.distance, 0)).toBe(0);
+  });
+});
+
+describe("weeklyLoad", () => {
+  it("compares the current week against the average of prior weeks with data", () => {
+    const rows = [
+      a("2026-09-06", { distance: 4000, moving_time: 1200 }), // current week (starts 08-31)
+      a("2026-08-25", { distance: 1000, moving_time: 300 }), // week starting 08-24
+      a("2026-08-18", { distance: 3000, moving_time: 900 }), // week starting 08-17
+    ];
+    const load = weeklyLoad(rows, "2026-09-06", 2);
+    expect(load.current).toEqual({ distance: 4000, movingTime: 1200 });
+    expect(load.average).toEqual({ distance: 2000, movingTime: 600 });
+    expect(load.distancePct).toBe(200);
+    expect(load.timePct).toBe(200);
+  });
+
+  it("averages only over weeks that actually have data", () => {
+    const rows = [
+      a("2026-09-06", { distance: 1000, moving_time: 300 }),
+      a("2026-08-25", { distance: 2000, moving_time: 600 }),
+    ];
+    const load = weeklyLoad(rows, "2026-09-06", 2);
+    expect(load.average).toEqual({ distance: 2000, movingTime: 600 });
+    expect(load.distancePct).toBe(50);
+  });
+
+  it("reports no average when there is no prior history", () => {
+    const rows = [a("2026-09-06", { distance: 1000, moving_time: 300 })];
+    const load = weeklyLoad(rows, "2026-09-06", 2);
+    expect(load.average).toBeNull();
+    expect(load.distancePct).toBeNull();
+    expect(load.timePct).toBeNull();
+  });
+});
+
+describe("weekComparison", () => {
+  it("totals the current calendar week and the one before it", () => {
+    // 2026-09-06 is a Sunday; its week starts Monday 2026-08-31.
+    const rows = [
+      a("2026-09-06", { distance: 2000 }), // current week (Mon 08-31 … Sun 09-06)
+      a("2026-08-27", { distance: 1000 }), // week starting Mon 08-24
+      a("2026-08-25", { distance: 500 }),  // same week as the 1000, totals to 1500
+    ];
+    const c = weekComparison(rows, "2026-09-06");
+    expect(c.week.distance).toBe(2000);
+    expect(c.prevWeek.distance).toBe(1500);
+    expect(c.distanceDeltaPct).toBeCloseTo(133.33, 0);
+  });
+
+  it("returns a null delta when the previous week had no distance", () => {
+    const rows = [a("2026-09-06", { distance: 2000 })];
+    const c = weekComparison(rows, "2026-09-06");
+    expect(c.distanceDeltaPct).toBeNull();
+    expect(c.isBestWeek).toBe(false);
+  });
+
+  it("flags a best week only when it beats every earlier week", () => {
+    const rows = [
+      a("2026-09-06", { distance: 5000 }), // current week
+      a("2026-08-25", { distance: 4000 }), // prior best
+    ];
+    const c = weekComparison(rows, "2026-09-06");
+    expect(c.isBestWeek).toBe(true);
+
+    const short = weekComparison([a("2026-09-06", { distance: 3000 }), a("2026-08-25", { distance: 4000 })], "2026-09-06");
+    expect(short.isBestWeek).toBe(false);
   });
 });
 

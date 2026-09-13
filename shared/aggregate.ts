@@ -20,6 +20,24 @@ export interface WeekBucket {
   count: number;
 }
 
+export interface WeeklyLoad {
+  current: { distance: number; movingTime: number };
+  average: { distance: number; movingTime: number } | null;
+  distancePct: number | null;
+  timePct: number | null;
+}
+
+export interface WeekComparison {
+  /** The current calendar week (Monday → today, inclusive). */
+  week: Totals;
+  /** The full calendar week before this one. */
+  prevWeek: Totals;
+  /** This week's distance as a percentage of last week's (100 = same). Null when last week had none. */
+  distanceDeltaPct: number | null;
+  /** Whether this week — even in progress — already beats every earlier week on record. */
+  isBestWeek: boolean;
+}
+
 export interface SportSlice {
   sport: string;
   count: number;
@@ -106,6 +124,64 @@ export function weeklyBuckets(
   }
 
   return starts.map((s) => buckets.get(s)!);
+}
+
+/** Compares the in-progress week's distance/time against the average of the
+ *  preceding `lookbackWeeks` weeks — only counting weeks that actually have
+ *  data, so a fresh account isn't diluted by empty history. */
+export function weeklyLoad(
+  rows: ActivitySummary[],
+  today: string,
+  lookbackWeeks = 6,
+): WeeklyLoad {
+  const buckets = weeklyBuckets(rows, lookbackWeeks + 1, today);
+  const current = buckets[buckets.length - 1] ?? { distance: 0, movingTime: 0, count: 0 };
+  const priorWeeks = buckets.slice(0, -1).filter((b) => b.count > 0);
+
+  if (priorWeeks.length === 0) {
+    return {
+      current: { distance: current.distance, movingTime: current.movingTime },
+      average: null,
+      distancePct: null,
+      timePct: null,
+    };
+  }
+
+  const average = {
+    distance: priorWeeks.reduce((sum, b) => sum + b.distance, 0) / priorWeeks.length,
+    movingTime: priorWeeks.reduce((sum, b) => sum + b.movingTime, 0) / priorWeeks.length,
+  };
+
+  return {
+    current: { distance: current.distance, movingTime: current.movingTime },
+    average,
+    distancePct: average.distance > 0 ? (current.distance / average.distance) * 100 : null,
+    timePct: average.movingTime > 0 ? (current.movingTime / average.movingTime) * 100 : null,
+  };
+}
+
+/** The frame a just-arrived activity lands in: this week's totals so far, the
+ *  calendar week before, how the two compare, and whether this is already a
+ *  record week. Uses Monday-start weeks to stay consistent with weeklyBuckets. */
+export function weekComparison(rows: ActivitySummary[], today: string): WeekComparison {
+  const thisMonday = mondayOf(today);
+  const week = totalsBetween(rows, thisMonday, today);
+  const prevWeek = totalsBetween(rows, addDays(thisMonday, -7), addDays(thisMonday, -1));
+
+  const byWeek = new Map<string, number>();
+  for (const r of rows) {
+    const start = mondayOf(r.local_date);
+    byWeek.set(start, (byWeek.get(start) ?? 0) + r.distance);
+  }
+  byWeek.delete(thisMonday);
+  const priorWeeks = [...byWeek.values()];
+
+  return {
+    week,
+    prevWeek,
+    distanceDeltaPct: prevWeek.distance > 0 ? (week.distance / prevWeek.distance) * 100 : null,
+    isBestWeek: week.distance > 0 && priorWeeks.length > 0 && week.distance > Math.max(...priorWeeks),
+  };
 }
 
 export function sportMix(rows: ActivitySummary[]): SportSlice[] {
