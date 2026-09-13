@@ -77,17 +77,17 @@ async function drain(stream: ReadableStream<Uint8Array>): Promise<string> {
 
 describe("streamCoachReply", () => {
   it("uses claude-opus-5", async () => {
-    await streamCoachReply(env, "DIGEST", [{ role: "user", content: "hi" }]);
+    await streamCoachReply(env.ANTHROPIC_API_KEY, "DIGEST", [{ role: "user", content: "hi" }]);
     expect(body()).toMatchObject({ model: "claude-opus-5" });
   });
 
   it("streams", async () => {
-    await streamCoachReply(env, "DIGEST", [{ role: "user", content: "hi" }]);
+    await streamCoachReply(env.ANTHROPIC_API_KEY, "DIGEST", [{ role: "user", content: "hi" }]);
     expect(body()).toMatchObject({ stream: true });
   });
 
   it("uses adaptive thinking and never sends budget_tokens", async () => {
-    await streamCoachReply(env, "DIGEST", [{ role: "user", content: "hi" }]);
+    await streamCoachReply(env.ANTHROPIC_API_KEY, "DIGEST", [{ role: "user", content: "hi" }]);
     const params = body();
     expect(params.thinking).toEqual({ type: "adaptive" });
     // budget_tokens is removed on Opus 5 and returns a 400.
@@ -95,7 +95,7 @@ describe("streamCoachReply", () => {
   });
 
   it("sends no assistant prefill — the last turn is always the user's", async () => {
-    await streamCoachReply(env, "DIGEST", [
+    await streamCoachReply(env.ANTHROPIC_API_KEY, "DIGEST", [
       { role: "user", content: "hi" },
       { role: "assistant", content: "hello" },
       { role: "user", content: "and?" },
@@ -105,7 +105,7 @@ describe("streamCoachReply", () => {
   });
 
   it("puts the digest in the cached system prefix, not in the messages", async () => {
-    await streamCoachReply(env, "DIGEST-MARKER", [{ role: "user", content: "hi" }]);
+    await streamCoachReply(env.ANTHROPIC_API_KEY, "DIGEST-MARKER", [{ role: "user", content: "hi" }]);
     const params = body() as {
       system: { type: string; text: string; cache_control?: unknown }[];
       messages: { content: string }[];
@@ -118,7 +118,7 @@ describe("streamCoachReply", () => {
   });
 
   it("emits the text deltas as SSE data lines", async () => {
-    const stream = await streamCoachReply(env, "DIGEST", [{ role: "user", content: "hi" }]);
+    const stream = await streamCoachReply(env.ANTHROPIC_API_KEY, "DIGEST", [{ role: "user", content: "hi" }]);
     const text = await drain(stream);
     expect(text).toContain("You ran ");
     expect(text).toContain("32 km.");

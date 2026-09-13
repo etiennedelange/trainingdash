@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { createRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Route as rootRoute } from "./__root";
 import { useCoachStream } from "@/hooks/useCoachStream";
+import { CoachKeySetup } from "@/components/CoachKeySetup";
+import { LoadingState } from "@/components/LoadingState";
+import { coachKeyQuery, queryKeys } from "@/lib/queries";
 import { todayLocalDate } from "@/lib/format";
 
 const SUGGESTIONS = [
@@ -10,18 +14,48 @@ const SUGGESTIONS = [
   "What should I do today?",
 ];
 
-function Coach() {
+export function Coach() {
   const { turns, ask, streaming, error } = useCoachStream();
   const [draft, setDraft] = useState("");
+  const queryClient = useQueryClient();
+  const { data: keyStatus, isPending: keyPending } = useQuery(coachKeyQuery);
 
   async function submit(question: string) {
     setDraft("");
     await ask(question, todayLocalDate());
   }
 
+  async function removeKey() {
+    await fetch("/api/coach/key", { method: "DELETE", credentials: "same-origin" });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.coachKey });
+  }
+
+  if (keyPending) return <LoadingState />;
+
+  if (!keyStatus?.hasKey) {
+    return (
+      <div className="p-10">
+        <h1 className="font-display text-[27px] font-bold">Coach</h1>
+        <div className="mt-6">
+          <CoachKeySetup />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col p-10">
-      <h1 className="font-display text-[27px] font-bold">Coach</h1>
+      <div className="flex items-baseline justify-between">
+        <h1 className="font-display text-[27px] font-bold">Coach</h1>
+        {keyStatus.source === "byok" ? (
+          <button
+            onClick={() => void removeKey()}
+            className="text-xs font-semibold text-muted hover:text-text"
+          >
+            Remove API key
+          </button>
+        ) : null}
+      </div>
       <p className="mt-1 text-sm text-muted">Insights drawn from your last 30 days</p>
 
       <div className="mt-6 flex-1 overflow-y-auto">

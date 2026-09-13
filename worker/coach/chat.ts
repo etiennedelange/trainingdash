@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Env } from "../env";
 import { SYSTEM_INSTRUCTIONS } from "./prompt";
 
 export interface CoachTurn {
@@ -17,11 +16,11 @@ export interface CoachTurn {
  * of paying for it again.
  */
 export async function streamCoachReply(
-  env: Env,
+  apiKey: string,
   digest: string,
   turns: CoachTurn[],
 ): Promise<ReadableStream<Uint8Array>> {
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const client = new Anthropic({ apiKey });
 
   const stream = (await client.messages.create({
     model: "claude-opus-5",
