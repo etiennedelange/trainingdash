@@ -3,6 +3,7 @@ import { Shell } from "@/components/Shell";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { AccountStatus } from "@/components/AccountStatus";
 import { ArrivalResult } from "@/components/ArrivalResult";
+import { CommandPalette } from "@/components/CommandPalette";
 import { LiveArrivalsProvider } from "@/hooks/useLiveUpdates";
 
 function RootLayout() {
@@ -19,6 +20,7 @@ function RootLayout() {
         <ArrivalResult />
         <Outlet />
         <UpdatePrompt />
+        <CommandPalette />
       </Shell>
     </LiveArrivalsProvider>
   );
