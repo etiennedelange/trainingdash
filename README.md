@@ -153,8 +153,11 @@ the Anthropic API per question.
 
 ## Status
 
-The data pipeline, the dashboard, and the Coach chat screen are complete:
-OAuth, resumable backfill, webhook ingest, live push, one dashboard screen,
-and a Claude-backed coach that answers questions about your training. The
-gamification layer — streaks, levels, badges, goals — is intentionally
-not built yet.
+The core loop is complete: OAuth, resumable backfill, webhook ingest, live
+push, an app-wide arrival result screen, and a Coach that answers questions
+about your training (optionally on your own Anthropic key, stored encrypted
+in D1). The at-a-glance "am I doing too much or too little" layer — an
+acute:chronic load band, a weekly distance goal, personal records, and
+backfill progress — plus quick navigation (search, date-range filter, Cmd+K
+palette) are also shipped. See `docs/ROADMAP.md` for what's next (offline
+persistence, deeper progress charts, and more).
