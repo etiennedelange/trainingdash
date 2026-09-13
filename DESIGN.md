@@ -21,31 +21,31 @@ colors:
   walk-blue: "#60a5fa"
 typography:
   display:
-    fontFamily: "Space Grotesk, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
     fontSize: "27px"
     fontWeight: 700
     lineHeight: 1.2
   body:
-    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
     fontSize: "14px"
     fontWeight: 500
     lineHeight: 1.5
   label:
-    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
     fontSize: "11px"
     fontWeight: 600
     letterSpacing: "0.04em"
   mono:
-    fontFamily: "JetBrains Mono, ui-monospace, monospace"
+    fontFamily: "Geist Mono, ui-monospace, monospace"
     fontSize: "24px"
     fontWeight: 700
     lineHeight: 1.1
 rounded:
-  control: "10px"
-  nav: "11px"
-  row: "13px"
-  tile: "15px"
-  card: "18px"
+  control: "4px"
+  nav: "5px"
+  row: "6px"
+  tile: "8px"
+  card: "10px"
 components:
   button-primary:
     backgroundColor: "{colors.signal-teal}"
@@ -97,7 +97,7 @@ Interactive surfaces are tactile and precise: state changes read as a deliberate
 **Key Characteristics:**
 - One signal color (Signal Teal) carries all "this is active/primary" meaning across buttons, the current streak stat, the weekly-distance bar, the calendar heatmap peak, and the route line.
 - Depth comes from a four-step background ladder (Void Black → Deep Panel → Terminal Card → Raised Panel) plus hairline borders — not shadows.
-- Every number is set in JetBrains Mono; every label is either a bold sans headline or a small uppercase mono-adjacent tag. There is no in-between.
+- Every number is set in Geist Mono; every label is either a bold sans headline or a small uppercase mono-adjacent tag. There is no in-between.
 - A closed, non-negotiable four-color sport palette (Run Green / Strength Magenta / Ride Violet / Walk Blue) is the only place color carries categorical (not just state) meaning.
 
 ## Colors
@@ -152,26 +152,26 @@ Same roles, warmer and inverted: a cream-paper ladder instead of a near-black on
 
 ## Typography
 
-**Display Font:** Space Grotesk (with ui-sans-serif, system-ui fallback)
-**Body Font:** Manrope (with ui-sans-serif, system-ui fallback)
-**Label/Mono Font:** JetBrains Mono (with ui-monospace, monospace fallback)
+**Display Font:** Archivo (with ui-sans-serif, system-ui fallback)
+**Body Font:** Archivo (with ui-sans-serif, system-ui fallback)
+**Label/Mono Font:** Geist Mono (with ui-monospace, monospace fallback)
 
-**Character:** A geometric, slightly technical display face over a warm, humanist body face, with every number pulled out into mono type. The pairing is what makes the "terminal" read work — headlines and body copy feel like a normal app, but the moment a number appears, it snaps into a fixed-width, telemetry-style register.
+**Character:** A sharp, technical grotesque for both display and body, with every number pulled out into a clean, neutral mono. Where the old pairing leaned on a warm humanist body face to soften the terminal, Archivo carries the instrument register all the way through — squared, precise, engineered — and Geist Mono snaps every measurement into a fixed-width telemetry-style register the moment a number appears. The pairing is what makes the "terminal" read work: headlines and body copy feel like a piece of instrumentation, not a lifestyle app.
 
 ### Hierarchy
-- **Display** (700, 27px, 1.2 line-height): page-level `<h1>` only ("Today", "Activities", "Progress", the activity name). Always paired with Space Grotesk.
+- **Display** (700, 27px, 1.2 line-height): page-level `<h1>` only ("Today", "Activities", "Progress", the activity name). Always paired with Archivo.
 - **Body** (500–700, 14px/13px, 1.5 line-height): default UI text — nav labels, buttons, section subheads (bold, muted-colored), meta descriptions.
 - **Label** (600, 11px, 0.04em tracking, uppercase): `StatTile`'s small caption under the value. The only uppercase-tracked text in the system — reserved for that one role, not used for nav or section headers.
-- **Mono** (700, 24px down to 12px depending on context, 1.1 line-height): every numeric readout — `StatTile` values, `ActivityRow`'s distance/duration/pace line, chart axis labels. Mono type is the visual signal for "this is data," at any size.
+- **Mono** (700, 24px down to 12px depending on context, 1.1 line-height): every numeric readout — `StatTile` values, `ActivityRow`'s distance/duration/pace line, chart axis labels. The current-streak hero is the one exception above the ramp at 64–88px (`StreakReadout`), sized to dominate the page. Mono type is the visual signal for "this is data," at any size.
 
 ### Named Rules
-**The All-Numbers-Are-Mono Rule.** Any value that is a measurement, count, duration, or pace renders in JetBrains Mono, regardless of font size or where it sits. Sans type is reserved for labels, names, and prose.
+**The All-Numbers-Are-Mono Rule.** Any value that is a measurement, count, duration, or pace renders in Geist Mono, regardless of font size or where it sits. Sans type is reserved for labels, names, and prose.
 
 **The One Uppercase Rule.** Uppercase + letter-spacing is reserved for `StatTile` captions. It does not migrate to nav items, section headers, or buttons — those stay sentence case and bold instead.
 
 ### Light Mode — display face swap
 
-The Display role's face changes from Space Grotesk to **Fraunces** (with ui-serif, Georgia fallback), a warm variable serif — everything else in the Hierarchy (sizes, weights, the Body/Label/Mono roles, both Named Rules) is unchanged. A bold slab-serif headline over a plain sans body/mono is the one typographic move that carries most of "paper" rather than "screen": the display face reads as printed, the data still reads as measured.
+The Display role's face changes from Archivo to **IBM Plex Serif** (with ui-serif, Georgia fallback), a sharp, technical serif — everything else in the Hierarchy (sizes, weights, the Body/Label/Mono roles, both Named Rules) is unchanged. A crisp serif headline over a plain sans body/mono is the one typographic move that carries most of "paper" rather than "screen": the display face reads as printed, the data still reads as measured.
 
 ## Layout
 
@@ -190,36 +190,36 @@ Light mode does not inherit the Flat-by-Default Rule; it replaces it with the op
 
 ## Shapes
 
-Corner radius scales with element size on a tight five-step ladder, not a generic sm/md/lg jump: **control** (10px — small buttons, the logo mark, tab pills), **nav** (11px — nav items, `AccountStatus` actions), **row** (13px — `ActivityRow`), **tile** (15px, `--radius-tile` — `StatTile`), **card** (18px, `--radius-card` — chart panels, the route-map frame, the update toast). All corners are soft rounded rectangles; there are no sharp corners, no pills except the tab buttons and the MixBar track/fill, and no clipping or angular cuts anywhere in the system.
+Corner radius scales with element size on a tight five-step ladder, not a generic sm/md/lg jump: **control** (4px — small buttons, the logo mark, tab pills), **nav** (5px — nav items, `AccountStatus` actions), **row** (6px — `ActivityRow`), **tile** (8px, `--radius-tile` — `StatTile`), **card** (10px, `--radius-card` — chart panels, the route-map frame, the update toast). Corners are near-sharp — a barely-there rounding that reads as machined rather than soft. No pills except the tab buttons and the MixBar track/fill, and no clipping or angular cuts anywhere in the system.
 
-### Light Mode — a softer, larger ladder
+### Light Mode — a softer, slightly larger ladder
 
-Same five roles, each a few px larger and rounder to read as soft paper edges rather than tight instrument bezels: **control** 14px, **nav** 16px, **row** 18px, **tile** 20px, **card** 26px. The ladder's shape (five steps, ordered by element size) is the invariant that carries across modes; the exact px values are each mode's own.
+Same five roles, each a few px larger to read as gentle paper edges rather than the tight instrument bezels of dark mode: **control** 6px, **nav** 7px, **row** 8px, **tile** 10px, **card** 12px. The ladder's shape (five steps, ordered by element size) is the invariant that carries across modes; the exact px values are each mode's own.
 
 ## Components
 
 ### Buttons
-- **Shape:** control radius (10px) for compact actions (ghost CTA, toast reload); nav radius (11px) for the full-width sidebar/account actions.
+- **Shape:** control radius (4px) for compact actions (ghost CTA, toast reload); nav radius (5px) for the full-width sidebar/account actions.
 - **Primary:** Signal Teal background, Void Black text, bold — used for "Connect Strava" and the toast's "Reload" action. Reserved for the single most important action on screen.
 - **Ghost:** transparent background, dashed Ghost Line border, Instrument Gray text — used for a low-commitment, optional action (`EnableNotifications`). Hover shifts the border to Instrument Gray.
 - **Secondary (nav/account "Log out"):** transparent background, Instrument Gray text, hover steps to Raised Panel — same visual language as an inactive nav item, not a distinct button style.
 
 ### Cards / Containers
-- **Corner Style:** tile radius (15px) for `StatTile`; card radius (18px) for everything larger (chart panels, route-map frame).
+- **Corner Style:** tile radius (8px) for `StatTile`; card radius (10px) for everything larger (chart panels, route-map frame).
 - **Background:** Terminal Card.
 - **Shadow Strategy:** none — see Elevation & Depth. Depth comes from sitting on Terminal Card against a Deep Panel or Void Black backdrop.
 - **Border:** Ghost Line hairline on every card.
 - **Internal Padding:** 16px (`p-4`) standard, 20px (`p-5`) for the wider MixBar panel.
 
 ### Activity Row (signature component)
-A single-line, densely-packed record: an 8px sport-color dot, a bold truncated title, and a right-aligned mono meta string (distance · duration · pace). Terminal Card background, Ghost Line border, row radius (13px), hover steps to Raised Panel. This is the system's core repeating unit — the entire Timeline view is a stack of these.
+A single-line, densely-packed record: an 8px sport-color dot, a bold truncated title, and a right-aligned mono meta string (distance · duration · pace). Terminal Card background, Ghost Line border, row radius (6px), hover steps to Raised Panel. This is the system's core repeating unit — the entire Timeline view is a stack of these.
 
 ### Tabs
-- **Style:** pill-shaped buttons in a `role="tablist"` row, control radius (10px), bold 11–12px text.
+- **Style:** pill-shaped buttons in a `role="tablist"` row, control radius (4px), bold 11–12px text.
 - **Active/Inactive:** active = Raised Panel background + Readout White text; inactive = Instrument Gray text, hover steps to Raised Panel. Identical state language to nav items.
 
 ### Navigation
-Fixed 220px sidebar, Deep Panel background, Ghost Line right border. Logo mark is an 8×8 (32px) rounded-square (10px radius) teal gradient tile with a small pace-bolt glyph. Nav items are full-width, nav radius (11px), bold 14px text; active state is Raised Panel + Readout White, inactive is Instrument Gray with a Raised Panel hover step. No animated indicator — state is purely a background swap.
+Fixed 220px sidebar, Deep Panel background, Ghost Line right border. Logo mark is an 8×8 (32px) rounded-square (4px radius) teal gradient tile with a small pace-bolt glyph. Nav items are full-width, nav radius (5px), bold 14px text; active state is Raised Panel + Readout White, inactive is Instrument Gray with a Raised Panel hover step. No animated indicator — state is purely a background swap.
 
 ### Charts (signature pattern)
 ECharts panels share one restrained palette: axis lines and split lines in Raised Panel gray, axis labels in Dim Gray/Instrument Gray at 10px, and exactly one data color — Signal Teal — for the meaningful series (the weekly-distance bar). The activity calendar heatmap ramps from Terminal Card through Signal Teal Deep to Signal Teal, so "more activity" always resolves toward the same signal color used everywhere else. The route map (MapLibre, dark tile style) draws its line in Signal Teal at 3px with rounded joins over a ground-colored casing, with a solid start dot, a hollow finish ring, and 1 km tick dots — the same signal color, once more, for "the thing the athlete actually did." Its chrome is token-built rather than MapLibre's: a compact attribution pill in `raised-panel`/`muted` (the stock white pill is overridden in `styles.css` under `.route-map`), and an overlay control cluster (zoom, fit-route, fullscreen) on `card`/`line`/`control` radius. Theme toggles swap the basemap with `setStyle` in place so the camera is preserved, and the overlay layers are re-added from the new theme's tokens.
@@ -234,7 +234,7 @@ No structural change: the same one-data-color rule, the same heatmap-ramps-to-th
 ### Do:
 - **Do** keep Signal Teal to a single, consistent semantic role (primary/active/current) across every surface — button, stat, chart, map alike.
 - **Do** use the background-ladder step (not a shadow) whenever a component needs to read as "raised" or "focused."
-- **Do** render every measurement, count, duration, and pace value in JetBrains Mono, at whatever size the context calls for.
+- **Do** render every measurement, count, duration, and pace value in Geist Mono, at whatever size the context calls for.
 - **Do** treat the four sport colors as a closed, fixed lookup table shared by every component that displays a sport type.
 - **Do** reserve uppercase + letter-spacing exclusively for `StatTile`-style meta captions.
 - **Do** style every new component through the `--color-*` / `--radius-*` / `--shadow-surface` custom properties, never a hardcoded hex or px radius — that's the entire mechanism that keeps dark and light mode in sync for free.
