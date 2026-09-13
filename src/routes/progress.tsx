@@ -3,14 +3,34 @@ import { createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Route as rootRoute } from "./__root";
 import { activitiesQuery } from "@/lib/queries";
-import { weeklyBuckets, weeklyLoad, weekComparison, sportMix } from "#shared/aggregate";
+import {
+  acwr,
+  bestWeekDistance,
+  personalRecords,
+  weekComparison,
+  weeklyBuckets,
+  weeklyLoad,
+  sportMix,
+} from "#shared/aggregate";
 import { WeeklyDistance } from "@/charts/WeeklyDistance";
 import { MixBar } from "@/components/MixBar";
-import { LoadReadout } from "@/components/LoadReadout";
+import { LoadBand } from "@/components/LoadBand";
 import { useWeeklyGoal } from "@/hooks/useWeeklyGoal";
 import { DataError } from "@/components/DataError";
 import { LoadingState } from "@/components/LoadingState";
-import { formatDistance, todayLocalDate } from "@/lib/format";
+import { formatDistance, formatPace, todayLocalDate } from "@/lib/format";
+
+function RecordTile({ value, label, note }: { value: string; label: string; note: string }) {
+  return (
+    <div className="rounded-[var(--radius-tile)] border border-line bg-card p-4 shadow-[var(--shadow-surface)]">
+      <div className="font-mono text-2xl font-bold text-text">{value}</div>
+      <div className="mt-1 text-[11px] font-semibold tracking-wide text-muted uppercase">{label}</div>
+      <div className="mt-1 truncate text-xs text-faint" title={note}>
+        {note}
+      </div>
+    </div>
+  );
+}
 
 function GoalSetter({
   goal,
@@ -80,7 +100,10 @@ export function Progress({ today }: { today: string }) {
   }
 
   const load = weeklyLoad(data, today);
+  const loadRatio = acwr(data, today);
   const week = weekComparison(data, today).week;
+  const pr = personalRecords(data);
+  const bestWeek = bestWeekDistance(data);
 
   return (
     <div className="p-10">
@@ -110,9 +133,42 @@ export function Progress({ today }: { today: string }) {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-col gap-1">
-          <LoadReadout load={load} metric="distance" />
-          <LoadReadout load={load} metric="time" />
+        <div className="mt-3">
+          <LoadBand acwr={loadRatio} />
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-bold text-muted">Personal records</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {pr.longestRun ? (
+            <RecordTile
+              value={`${formatDistance(pr.longestRun.value)} km`}
+              label="longest run"
+              note={`${pr.longestRun.name} · ${pr.longestRun.date}`}
+            />
+          ) : null}
+          {pr.fastestRun ? (
+            <RecordTile
+              value={`${formatPace(pr.fastestRun.value)} /km`}
+              label="fastest run"
+              note={`${pr.fastestRun.name} · ${pr.fastestRun.date}`}
+            />
+          ) : null}
+          {pr.mostClimb ? (
+            <RecordTile
+              value={`${Math.round(pr.mostClimb.value)} m`}
+              label="most climbing"
+              note={`${pr.mostClimb.name} · ${pr.mostClimb.date}`}
+            />
+          ) : null}
+          {bestWeek ? (
+            <RecordTile
+              value={`${formatDistance(bestWeek.distance)} km`}
+              label="best week"
+              note={`Week of ${bestWeek.weekStart}`}
+            />
+          ) : null}
         </div>
       </section>
 

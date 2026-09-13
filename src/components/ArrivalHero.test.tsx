@@ -70,4 +70,10 @@ describe("ArrivalHero", () => {
     await expect.element(page.getByText(/no prior week/i)).toBeInTheDocument();
     await expect.element(page.getByText(/best week yet/i)).not.toBeInTheDocument();
   });
+
+  it("shows a tag for each personal record the arrival sets", async () => {
+    mount({ ...context, newRecords: ["Longest run", "Fastest run"] });
+    await expect.element(page.getByText(/new record · longest run/i)).toBeInTheDocument();
+    await expect.element(page.getByText(/new record · fastest run/i)).toBeInTheDocument();
+  });
 });

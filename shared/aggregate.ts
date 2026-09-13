@@ -38,6 +38,55 @@ export interface WeekComparison {
   isBestWeek: boolean;
 }
 
+export type LoadBandId = "detraining" | "steady" | "spiking";
+
+export interface Acwr {
+  /** Mean daily moving time over the last 7 days. */
+  acute: number;
+  /** Mean daily moving time over the last 28 days. */
+  chronic: number;
+  /** acute / chronic. Null until 28 days of history exist. */
+  ratio: number | null;
+  /** The band the ratio falls into, if it can be computed. */
+  band: LoadBandId | null;
+}
+
+/** The acute:chronic boundary values (as a multiple of the chronic daily
+ *  mean). Below the low end the athlete is detraining; above the high end
+ *  the load is spiking toward injury territory. */
+const DETRAIN_RATIO = 0.8;
+const SPIKE_RATIO = 1.5;
+
+/**
+ * Acute:Chronic Workload Ratio, the coach-standard "am I doing too much or
+ * too little" readout. Acute load is the mean daily moving time of the last
+ * 7 days; chronic is the mean over the last 28. Dividing daily means (not
+ * raw sums) is what lets a recent spike push the ratio above 1 — a recent
+ * surge against a lighter baseline reads > 1.5, a quiet patch < 0.8.
+ *
+ * The ratio is only reported once the chronic window shows real training
+ * (at least 7 active days in 28) — before that, a single long run would
+ * divide a 7-day mean by a 28-day one and read "spiking" against an empty
+ * baseline, which is noise, not signal.
+ */
+export function acwr(rows: ActivitySummary[], today: string): Acwr {
+  const chronicRows = rows.filter(
+    (r) => r.local_date >= addDays(today, -27) && r.local_date <= today,
+  );
+  const chronicDays = new Set(chronicRows.map((r) => r.local_date)).size;
+
+  const acute = totalsBetween(rows, addDays(today, -6), today).movingTime / 7;
+  const chronic = chronicRows.reduce((sum, r) => sum + r.moving_time, 0) / 28;
+
+  const ratio = chronic > 0 && chronicDays >= 7 ? acute / chronic : null;
+  let band: LoadBandId | null = null;
+  if (ratio !== null) {
+    band = ratio < DETRAIN_RATIO ? "detraining" : ratio > SPIKE_RATIO ? "spiking" : "steady";
+  }
+
+  return { acute, chronic, ratio, band };
+}
+
 export interface SportSlice {
   sport: string;
   count: number;
@@ -182,6 +231,91 @@ export function weekComparison(rows: ActivitySummary[], today: string): WeekComp
     distanceDeltaPct: prevWeek.distance > 0 ? (week.distance / prevWeek.distance) * 100 : null,
     isBestWeek: week.distance > 0 && priorWeeks.length > 0 && week.distance > Math.max(...priorWeeks),
   };
+}
+
+const RUN_SPORTS = new Set(["Run", "TrailRun"]);
+
+export interface RecordEntry {
+  /** The raw value: metres, seconds-per-km, or metres of gain. */
+  value: number;
+  name: string;
+  date: string;
+}
+
+export interface PersonalRecords {
+  longestRun: RecordEntry | null;
+  fastestRun: RecordEntry | null;
+  mostClimb: RecordEntry | null;
+}
+
+/**
+ * Honest personal records derived from the summary rows the client already
+ * has — no invented achievements. Fastest-run pace ignores anything under a
+ * kilometre so a sprint-length warmup doesn't claim the record.
+ */
+export function personalRecords(rows: ActivitySummary[]): PersonalRecords {
+  let longestRun: RecordEntry | null = null;
+  let fastestRun: RecordEntry | null = null;
+  let mostClimb: RecordEntry | null = null;
+
+  for (const r of rows) {
+    if (RUN_SPORTS.has(r.sport_type)) {
+      if (!longestRun || r.distance > longestRun.value) {
+        longestRun = { value: r.distance, name: r.name, date: r.local_date };
+      }
+      if (r.distance >= 1000) {
+        const pace = r.moving_time / (r.distance / 1000);
+        if (!fastestRun || pace < fastestRun.value) {
+          fastestRun = { value: pace, name: r.name, date: r.local_date };
+        }
+      }
+    }
+    const gain = r.total_elevation_gain ?? 0;
+    if (gain > 0 && (!mostClimb || gain > mostClimb.value)) {
+      mostClimb = { value: gain, name: r.name, date: r.local_date };
+    }
+  }
+
+  return { longestRun, fastestRun, mostClimb };
+}
+
+export interface BestWeek {
+  weekStart: string;
+  distance: number;
+}
+
+/** The highest-distance Monday-start week on record, for the PR board. */
+export function bestWeekDistance(rows: ActivitySummary[]): BestWeek | null {
+  const byWeek = new Map<string, number>();
+  for (const r of rows) {
+    const start = mondayOf(r.local_date);
+    byWeek.set(start, (byWeek.get(start) ?? 0) + r.distance);
+  }
+  let best: BestWeek | null = null;
+  for (const [weekStart, distance] of byWeek) {
+    if (!best || distance > best.distance) best = { weekStart, distance };
+  }
+  return best;
+}
+
+/** Which records the given activity sets against the rest of the history —
+ *  used by the arrival hero to say "you just set a record." */
+export function recordsSetBy(rows: ActivitySummary[], activity: ActivitySummary): string[] {
+  const others = rows.filter((r) => r.id !== activity.id);
+  const before = personalRecords(others);
+  const after = personalRecords([...others, activity]);
+
+  const labels: string[] = [];
+  if (after.longestRun && (!before.longestRun || after.longestRun.value > before.longestRun.value)) {
+    labels.push("Longest run");
+  }
+  if (after.fastestRun && (!before.fastestRun || after.fastestRun.value < before.fastestRun.value)) {
+    labels.push("Fastest run");
+  }
+  if (after.mostClimb && (!before.mostClimb || after.mostClimb.value > before.mostClimb.value)) {
+    labels.push("Most climbing");
+  }
+  return labels;
 }
 
 export function sportMix(rows: ActivitySummary[]): SportSlice[] {

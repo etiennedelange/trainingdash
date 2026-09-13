@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { ActivitySummary } from "./types";
-import { activeDays, computeStreak, groupByDay, weeklyBuckets, weeklyLoad, weekComparison, sportMix, totalsBetween } from "./aggregate";
+import { activeDays, computeStreak, groupByDay, weeklyBuckets, weeklyLoad, weekComparison, acwr, personalRecords, bestWeekDistance, recordsSetBy, sportMix, totalsBetween } from "./aggregate";
 
 const a = (local_date: string, over: Partial<ActivitySummary> = {}): ActivitySummary => ({
   id: Math.random(),
@@ -186,6 +186,116 @@ describe("weekComparison", () => {
 
     const short = weekComparison([a("2026-09-06", { distance: 3000 }), a("2026-08-25", { distance: 4000 })], "2026-09-06");
     expect(short.isBestWeek).toBe(false);
+  });
+});
+
+// Builds `days` rows of one activity per day ending at `end`, each of the
+// given moving time — the building block for acute:chronic scenarios.
+function dailyRows(end: string, days: number, movingTime: number): ActivitySummary[] {
+  const rows: ActivitySummary[] = [];
+  for (let i = 0; i < days; i++) {
+    const date = new Date(`${end}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() - i);
+    rows.push(a(date.toISOString().slice(0, 10), { moving_time: movingTime, distance: 5000 }));
+  }
+  return rows;
+}
+
+describe("acwr", () => {
+  it("is 1.0 when the last 7 days match the trailing 28-day average", () => {
+    // One run a day for the whole 28-day window → daily means are equal.
+    const load = acwr(dailyRows("2026-09-06", 28, 3600), "2026-09-06");
+    expect(load.ratio).toBeCloseTo(1.0, 5);
+    expect(load.band).toBe("steady");
+  });
+
+  it("spikes when the last week is heavy against a lighter baseline", () => {
+    // Two runs a day for 7 days, one a day for the 21 before that.
+    const rows = [...dailyRows("2026-09-06", 7, 7200), ...dailyRows("2026-08-30", 21, 3600)];
+    const load = acwr(rows, "2026-09-06");
+    // acute mean 7200, chronic mean (7·7200 + 21·3600)/28 = 4500 → 1.6
+    expect(load.ratio).toBeCloseTo(1.6, 1);
+    expect(load.band).toBe("spiking");
+  });
+
+  it("detrains when the last week is quiet against a heavier baseline", () => {
+    const rows = [...dailyRows("2026-09-06", 1, 3600), ...dailyRows("2026-08-30", 21, 3600)];
+    const load = acwr(rows, "2026-09-06");
+    // acute mean 3600/7 ≈ 514, chronic mean 22·3600/28 ≈ 2829 → ≈ 0.18
+    expect(load.ratio).toBeLessThan(0.8);
+    expect(load.band).toBe("detraining");
+  });
+
+  it("has no ratio until there is chronic history", () => {
+    const load = acwr([], "2026-09-06");
+    expect(load.ratio).toBeNull();
+    expect(load.band).toBeNull();
+  });
+
+  it("has no ratio with too little baseline training (fewer than 7 days in 28)", () => {
+    const load = acwr(dailyRows("2026-09-06", 3, 3600), "2026-09-06");
+    expect(load.ratio).toBeNull();
+    expect(load.band).toBeNull();
+  });
+});
+
+describe("personalRecords", () => {
+  it("finds the longest run, fastest run pace, and most climbing", () => {
+    const rows = [
+      a("2026-09-01", { sport_type: "Run", distance: 5000, moving_time: 1800, total_elevation_gain: 50 }),
+      a("2026-09-02", { sport_type: "Run", distance: 10000, moving_time: 3300, total_elevation_gain: 120, name: "Long Run" }),
+      a("2026-09-03", { sport_type: "Ride", distance: 30000, moving_time: 5400, total_elevation_gain: 400, name: "Climb Day" }),
+    ];
+    const pr = personalRecords(rows);
+    expect(pr.longestRun?.name).toBe("Long Run");
+    expect(pr.longestRun?.value).toBe(10000);
+    expect(pr.mostClimb?.name).toBe("Climb Day");
+    expect(pr.mostClimb?.value).toBe(400);
+    // fastest run: 5km in 1800s → 360 s/km beats 10km in 3300s → 330 s/km
+    expect(pr.fastestRun?.name).toBe("Long Run");
+    expect(pr.fastestRun?.value).toBe(330);
+  });
+
+  it("ignores sub-kilometre efforts for the fastest-run record", () => {
+    const rows = [
+      a("2026-09-01", { sport_type: "Run", distance: 5000, moving_time: 1800 }),
+      a("2026-09-02", { sport_type: "Run", distance: 400, moving_time: 60 }), // 150 s/km — would "win"
+    ];
+    expect(personalRecords(rows).fastestRun?.value).toBe(360);
+  });
+
+  it("returns nulls for an empty history", () => {
+    expect(personalRecords([])).toEqual({ longestRun: null, fastestRun: null, mostClimb: null });
+  });
+});
+
+describe("bestWeekDistance", () => {
+  it("finds the highest Monday-start week", () => {
+    const rows = [
+      a("2026-09-06", { distance: 1000 }), // week of 08-31
+      a("2026-08-27", { distance: 2000 }), // week of 08-24
+      a("2026-08-25", { distance: 3000 }), // same week of 08-24 → 5000
+    ];
+    const best = bestWeekDistance(rows);
+    expect(best?.weekStart).toBe("2026-08-24");
+    expect(best?.distance).toBe(5000);
+  });
+
+  it("returns null with no rows", () => {
+    expect(bestWeekDistance([])).toBeNull();
+  });
+});
+
+describe("recordsSetBy", () => {
+  it("reports only the records the given activity improves", () => {
+    const history = [
+      a("2026-09-01", { id: 1, sport_type: "Run", distance: 5000, moving_time: 1800, total_elevation_gain: 50 }),
+    ];
+    const pr = a("2026-09-02", { id: 2, sport_type: "Run", distance: 10000, moving_time: 3300, total_elevation_gain: 120 });
+    expect(recordsSetBy([...history, pr], pr)).toEqual(["Longest run", "Fastest run", "Most climbing"]);
+
+    const worse = a("2026-09-02", { id: 3, sport_type: "Run", distance: 3000, moving_time: 1200 });
+    expect(recordsSetBy([...history, worse], worse)).toEqual([]);
   });
 });
 

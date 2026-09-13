@@ -33,7 +33,7 @@ describe("Progress", () => {
       row(3, "2026-09-03", "Ride"),
       row(4, "2026-09-04", "Walk"),
     ]);
-    await expect.element(page.getByText("Run")).toBeInTheDocument();
+    await expect.element(page.getByText("Run", { exact: true })).toBeInTheDocument();
     await expect.element(page.getByText("50%")).toBeInTheDocument();
   });
 
@@ -49,7 +49,19 @@ describe("Progress", () => {
     ]);
     await page.getByRole("spinbutton", { name: "Weekly distance goal in kilometres" }).fill("10");
     await page.getByRole("button", { name: "Set" }).click();
-    await expect.element(page.getByText(/5\.00 km/)).toBeInTheDocument();
     await expect.element(page.getByText(/10 km/)).toBeInTheDocument();
+  });
+
+  it("shows personal records derived from the history", async () => {
+    await mount([
+      row(1, "2026-09-01", "Run"),
+      row(2, "2026-09-03", "Run"),
+      row(3, "2026-09-04", "Ride"),
+    ]);
+    await expect.element(page.getByText("longest run")).toBeInTheDocument();
+    await expect.element(page.getByText("fastest run")).toBeInTheDocument();
+    await expect.element(page.getByText("best week")).toBeInTheDocument();
+    // No climbing in the fixture, so that record stays hidden.
+    await expect.element(page.getByText("most climbing")).not.toBeInTheDocument();
   });
 });

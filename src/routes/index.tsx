@@ -2,11 +2,12 @@ import { createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Route as rootRoute } from "./__root";
 import { activitiesQuery, meQuery } from "@/lib/queries";
-import { computeStreak, weeklyLoad, weekComparison } from "#shared/aggregate";
+import { acwr, computeStreak, weekComparison } from "#shared/aggregate";
 import { StatTile } from "@/components/StatTile";
 import { StreakReadout } from "@/components/StreakReadout";
 import { ActivityRow } from "@/components/ActivityRow";
-import { LoadReadout } from "@/components/LoadReadout";
+import { LoadBand } from "@/components/LoadBand";
+import { BackfillStatus } from "@/components/BackfillStatus";
 import { EnableNotifications } from "@/components/EnableNotifications";
 import { DataError } from "@/components/DataError";
 import { LoadingState } from "@/components/LoadingState";
@@ -14,8 +15,14 @@ import { useHeroArrival } from "@/hooks/useLiveUpdates";
 import { formatDistance, formatDuration, todayLocalDate } from "@/lib/format";
 
 export function Today({ today }: { today: string }) {
-  const { data, isPending, isError, error, refetch } = useQuery(activitiesQuery);
   const { data: me } = useQuery(meQuery);
+  // While the first-run backfill is still running, keep the activities list
+  // fresh so the import count below grows on its own.
+  const importing = me !== undefined && me.connected && !me.backfill.complete;
+  const { data, isPending, isError, error, refetch } = useQuery({
+    ...activitiesQuery,
+    refetchInterval: importing ? 4000 : undefined,
+  });
   const { activity: heroActivity } = useHeroArrival();
 
   if (isPending) return <LoadingState />;
@@ -31,13 +38,15 @@ export function Today({ today }: { today: string }) {
 
   const comparison = weekComparison(rows, today);
   const streak = computeStreak(rows, today);
-  const load = weeklyLoad(rows, today);
+  const loadRatio = acwr(rows, today);
 
   return (
     <div className="p-10">
       <h1 className="font-display text-[27px] font-bold">Today</h1>
 
-      {rows.length === 0 ? (
+      {importing ? <BackfillStatus count={rows.length} error={me?.backfill.last_error ?? null} /> : null}
+
+      {rows.length === 0 && !importing ? (
         <p className="mt-6 text-sm text-muted">
           No activities yet — the import runs in the background after you connect.
         </p>
@@ -53,7 +62,7 @@ export function Today({ today }: { today: string }) {
           </div>
 
           <div className="mt-3">
-            <LoadReadout load={load} metric="distance" />
+            <LoadBand acwr={loadRatio} />
           </div>
 
           <h2 className="mt-10 mb-3 text-sm font-bold text-muted">Recent activities</h2>
