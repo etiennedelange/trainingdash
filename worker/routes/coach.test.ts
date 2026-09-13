@@ -1,6 +1,7 @@
 import { env, SELF } from "cloudflare:test";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { signSession } from "../session";
+import { saveAthlete } from "../db/athlete";
 
 // NOTE ON MOCKING STRATEGY
 //
@@ -37,9 +38,13 @@ async function mockFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   return new Response(sse, { status: 200, headers: { "content-type": "text/event-stream" } });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   lastRequestBody = undefined;
   vi.stubGlobal("fetch", mockFetch);
+  await env.DB.prepare("DELETE FROM athlete").run();
+  await saveAthlete(env.DB, {
+    id: 42, access_token: "a", refresh_token: "r", expires_at: 100, connected: true,
+  });
 });
 
 afterEach(() => {
@@ -104,5 +109,76 @@ describe("POST /api/coach", () => {
       today: "2026-09-06",
     });
     expect(res.status).toBe(200);
+  });
+
+  it("412s with no_api_key when no key is stored and the env has none either", async () => {
+    const original = env.ANTHROPIC_API_KEY;
+    env.ANTHROPIC_API_KEY = "";
+    try {
+      const res = await post(valid);
+      expect(res.status).toBe(412);
+      expect(await res.json()).toEqual({ error: "no_api_key" });
+    } finally {
+      env.ANTHROPIC_API_KEY = original;
+    }
+  });
+
+  it("uses the stored BYOK key over the env fallback when both exist", async () => {
+    await SELF.fetch("http://example.com/api/coach/key", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `sd_session=${await signSession(42, env.SESSION_SECRET)}`,
+      },
+      body: JSON.stringify({ apiKey: "sk-ant-abcdefghijklmnop" }),
+    });
+    const res = await post(valid);
+    expect(res.status).toBe(200);
+  });
+});
+
+async function keyRequest(method: string, body?: unknown, withSession = true): Promise<Response> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (withSession) headers.Cookie = `sd_session=${await signSession(42, env.SESSION_SECRET)}`;
+  return await SELF.fetch("http://example.com/api/coach/key", {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
+describe("GET/PUT/DELETE /api/coach/key", () => {
+  it("401s without a session", async () => {
+    expect((await keyRequest("GET", undefined, false)).status).toBe(401);
+  });
+
+  it("falls back to the env key by default, with no stored BYOK key", async () => {
+    const res = await keyRequest("GET");
+    expect(await res.json()).toEqual({ hasKey: true, source: "env" });
+  });
+
+  it("reports no key at all when neither a stored key nor the env fallback exists", async () => {
+    const original = env.ANTHROPIC_API_KEY;
+    env.ANTHROPIC_API_KEY = "";
+    try {
+      expect(await (await keyRequest("GET")).json()).toEqual({ hasKey: false, source: "none" });
+    } finally {
+      env.ANTHROPIC_API_KEY = original;
+    }
+  });
+
+  it("rejects a value that doesn't look like an Anthropic key", async () => {
+    const res = await keyRequest("PUT", { apiKey: "not-a-key" });
+    expect(res.status).toBe(400);
+  });
+
+  it("saves a key, then reports it as the byok source, then clears it back to env", async () => {
+    const put = await keyRequest("PUT", { apiKey: "sk-ant-abcdefghijklmnop" });
+    expect(put.status).toBe(200);
+    expect(await (await keyRequest("GET")).json()).toEqual({ hasKey: true, source: "byok" });
+
+    const del = await keyRequest("DELETE");
+    expect(del.status).toBe(200);
+    expect(await (await keyRequest("GET")).json()).toEqual({ hasKey: true, source: "env" });
   });
 });

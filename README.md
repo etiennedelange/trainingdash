@@ -52,7 +52,10 @@ cp .dev.vars.example .dev.vars
 # Fill in STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET.
 # STRAVA_VERIFY_TOKEN: any random string.
 # SESSION_SECRET: openssl rand -hex 32
-# ANTHROPIC_API_KEY: from https://console.anthropic.com — powers the Coach.
+# ANTHROPIC_API_KEY: optional — a default Anthropic key for the Coach.
+# Leave it blank and instead paste a key in-app (Coach > Save key) to run
+# Coach on the signed-in athlete's own key (stored encrypted in D1) instead
+# of one baked into the deployment.
 ```
 
 ### 2. Database
@@ -111,7 +114,7 @@ pnpm exec wrangler secret put STRAVA_CLIENT_ID
 pnpm exec wrangler secret put STRAVA_CLIENT_SECRET
 pnpm exec wrangler secret put STRAVA_VERIFY_TOKEN
 pnpm exec wrangler secret put SESSION_SECRET
-pnpm exec wrangler secret put ANTHROPIC_API_KEY
+pnpm exec wrangler secret put ANTHROPIC_API_KEY   # optional — see Setup step 1
 
 # Point APP_URL in wrangler.jsonc at the deployed origin first, and set
 # ALLOWED_ATHLETE_ID to your Strava athlete id so nobody else can connect.

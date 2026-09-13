@@ -13,6 +13,7 @@ export const queryKeys = {
   me: ["me"] as const,
   activities: ["activities"] as const,
   activity: (id: number) => ["activity", id] as const,
+  coachKey: ["coach", "key"] as const,
 };
 
 export const meQuery = queryOptions({
@@ -32,3 +33,13 @@ export const activityQuery = (id: number) =>
     queryKey: queryKeys.activity(id),
     queryFn: () => apiGet<ActivityDetail>(`/api/activities/${id}`),
   });
+
+export interface CoachKeyStatus {
+  hasKey: boolean;
+  source: "byok" | "env" | "none";
+}
+
+export const coachKeyQuery = queryOptions({
+  queryKey: queryKeys.coachKey,
+  queryFn: () => apiGet<CoachKeyStatus>("/api/coach/key"),
+});

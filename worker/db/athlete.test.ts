@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { describe, it, expect, beforeEach } from "vitest";
-import { getAthlete, saveAthlete, setConnected } from "./athlete";
+import { getAthlete, saveAthlete, setConnected, getCoachKeyEnc, setCoachKeyEnc } from "./athlete";
 
 beforeEach(async () => {
   await env.DB.prepare("DELETE FROM athlete").run();
@@ -26,5 +26,23 @@ describe("athlete", () => {
     });
     await setConnected(env.DB, 42, false);
     expect((await getAthlete(env.DB))?.connected).toBe(false);
+  });
+
+  it("has no coach key until one is set", async () => {
+    await saveAthlete(env.DB, {
+      id: 42, access_token: "a", refresh_token: "r", expires_at: 100, connected: true,
+    });
+    expect(await getCoachKeyEnc(env.DB)).toBeNull();
+  });
+
+  it("saves and clears a coach key", async () => {
+    await saveAthlete(env.DB, {
+      id: 42, access_token: "a", refresh_token: "r", expires_at: 100, connected: true,
+    });
+    await setCoachKeyEnc(env.DB, "ciphertext-blob");
+    expect(await getCoachKeyEnc(env.DB)).toBe("ciphertext-blob");
+
+    await setCoachKeyEnc(env.DB, null);
+    expect(await getCoachKeyEnc(env.DB)).toBeNull();
   });
 });

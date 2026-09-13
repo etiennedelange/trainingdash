@@ -17,11 +17,11 @@ export function DataError({
 }) {
   if (error instanceof ApiError && error.status === 401) {
     return (
-      <div className="p-10">
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 p-10 text-center">
         <p className="text-sm text-muted">Connect your Strava account to see your {subject}.</p>
         <a
           href="/auth/login"
-          className="mt-4 inline-block rounded-[var(--radius-nav)] px-4 py-2.5 text-sm font-bold text-on-accent"
+          className="inline-block rounded-[var(--radius-nav)] px-5 py-2.5 text-sm font-bold text-on-accent"
           style={{ background: "var(--color-accent)" }}
         >
           Connect Strava
@@ -31,11 +31,11 @@ export function DataError({
   }
 
   return (
-    <div className="p-10">
+    <div className="flex min-h-full flex-col items-center justify-center gap-4 p-10 text-center">
       <p className="text-sm text-muted">Couldn't load {subject} — check your connection and try again.</p>
       <button
         onClick={onRetry}
-        className="mt-4 rounded-[var(--radius-control)] border border-line px-4 py-2 text-sm font-bold text-muted hover:border-muted"
+        className="rounded-[var(--radius-control)] border border-line px-4 py-2 text-sm font-bold text-muted hover:border-muted"
       >
         Retry
       </button>

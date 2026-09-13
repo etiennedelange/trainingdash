@@ -31,11 +31,10 @@ function mount(me: unknown) {
 }
 
 describe("AccountStatus", () => {
-  it("shows a connect link when not connected", async () => {
+  it("renders nothing when not connected — the main content carries the one Connect CTA", async () => {
     await mount({ athleteId: 1, connected: false, backfill: { page: 0, complete: false, last_error: null }, vapidPublicKey: "x" });
-    const link = page.getByRole("link", { name: "Connect Strava" });
-    await expect.element(link).toBeInTheDocument();
-    await expect.element(link).toHaveAttribute("href", "/auth/login");
+    await expect.element(page.getByRole("link", { name: "Connect Strava" })).not.toBeInTheDocument();
+    await expect.element(page.getByRole("button", { name: "Log out" })).not.toBeInTheDocument();
   });
 
   it("shows a logout button when connected", async () => {
@@ -60,5 +59,41 @@ describe("AccountStatus", () => {
 
     await expect.poll(() => fetchSpy.mock.calls.length).toBeGreaterThan(0);
     expect(fetchSpy).toHaveBeenCalledWith("/auth/logout", expect.objectContaining({ method: "POST" }));
+  });
+
+  it("shows a pending state and disables the button while logging out", async () => {
+    const me = { athleteId: 1, connected: true, backfill: { page: 3, complete: true, last_error: null }, vapidPublicKey: "x" };
+    let resolveLogout!: () => void;
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes("/api/me")) return new Response(JSON.stringify(me), { status: 200 });
+      await new Promise<void>((resolve) => (resolveLogout = resolve));
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await mount(me);
+    await page.getByRole("button", { name: "Log out" }).click();
+
+    const pendingButton = page.getByRole("button", { name: "Logging out…" });
+    await expect.element(pendingButton).toBeInTheDocument();
+    await expect.element(pendingButton).toBeDisabled();
+
+    resolveLogout();
+  });
+
+  it("shows an inline error when the logout request fails", async () => {
+    const me = { athleteId: 1, connected: true, backfill: { page: 3, complete: true, last_error: null }, vapidPublicKey: "x" };
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL) =>
+      String(input).includes("/api/me")
+        ? new Response(JSON.stringify(me), { status: 200 })
+        : new Response(null, { status: 500 }),
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await mount(me);
+    await page.getByRole("button", { name: "Log out" }).click();
+
+    await expect.element(page.getByText("Couldn't log out. Try again.")).toBeInTheDocument();
+    await expect.element(page.getByRole("button", { name: "Log out" })).toBeInTheDocument();
   });
 });

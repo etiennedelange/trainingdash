@@ -1,6 +1,6 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { meQuery, queryKeys } from "@/lib/queries";
+import { meQuery } from "@/lib/queries";
 
 /**
  * The Worker refuses a second Strava athlete and never exposes a signup
@@ -13,42 +13,36 @@ export function AccountStatus() {
   const navigate = useNavigate();
   const { data, isError } = useQuery(meQuery);
 
-  if (!isError && !data) return null;
+  const logout = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
+      if (!res.ok) throw new Error(`Logout failed (${res.status})`);
+    },
+    onSuccess: async () => {
+      // Clearing the whole cache (not just `me`/`activities`) means every
+      // route reacts, not only whichever one happens to read those two
+      // queries — the previous targeted removeQueries left routes like
+      // /progress or /coach showing no change until an unrelated navigation.
+      queryClient.clear();
+      await navigate({ to: "/" });
+    },
+  });
 
-  if (isError || !data.connected) {
-    return (
-      <a
-        href="/auth/login"
-        className="flex items-center justify-center gap-1.5 rounded-[var(--radius-nav)] px-3 py-2.5 text-center text-sm font-bold text-on-accent"
-        style={{ background: "var(--color-accent)" }}
-      >
-        Connect Strava
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M7 17 17 7M9 7h8v8"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </a>
-    );
-  }
-
-  async function logout() {
-    await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
-    queryClient.removeQueries({ queryKey: queryKeys.me });
-    queryClient.removeQueries({ queryKey: queryKeys.activities });
-    await navigate({ to: "/" });
-  }
+  // The main content area already carries the one, centered "Connect
+  // Strava" CTA (via DataError) whenever a page's data is unavailable — the
+  // sidebar footer stays empty rather than showing a second copy of it.
+  if (!data || isError || !data.connected) return null;
 
   return (
-    <button
-      onClick={() => void logout()}
-      className="w-full rounded-[var(--radius-nav)] px-3 py-2.5 text-left text-sm font-bold text-muted hover:bg-raised"
-    >
-      Log out
-    </button>
+    <div className="flex flex-col gap-1">
+      <button
+        onClick={() => logout.mutate()}
+        disabled={logout.isPending}
+        className="w-full rounded-[var(--radius-nav)] px-3 py-2.5 text-left text-sm font-bold text-muted transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {logout.isPending ? "Logging out…" : "Log out"}
+      </button>
+      {logout.isError ? <p className="px-3 text-xs text-danger">Couldn't log out. Try again.</p> : null}
+    </div>
   );
 }
