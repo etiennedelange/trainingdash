@@ -63,10 +63,41 @@ describe("Activities", () => {
   it("offers to clear a filter that matches nothing, and restores the list", async () => {
     await mount([row(1, "2026-09-06", "Run")]);
     await page.getByRole("button", { name: "Walk" }).click();
-    await expect.element(page.getByText(/no walk activities/i)).toBeInTheDocument();
+    await expect.element(page.getByText(/no activities match your filters/i)).toBeInTheDocument();
 
-    await page.getByRole("button", { name: "Show all" }).click();
+    await page.getByRole("button", { name: "Clear filters" }).click();
     await expect.element(page.getByText("Run 1")).toBeInTheDocument();
+  });
+
+  it("searches the timeline by activity name", async () => {
+    await mount([row(1, "2026-09-06", "Run"), row(2, "2026-09-06", "Ride")]);
+    await page.getByRole("searchbox", { name: "Search activities" }).fill("ride");
+    await expect.element(page.getByText("Ride 2")).toBeInTheDocument();
+    await expect.element(page.getByText("Run 1")).not.toBeInTheDocument();
+  });
+
+  it("filters the timeline to a date range", async () => {
+    await mount([
+      row(1, "2026-09-01", "Run"),
+      row(2, "2026-09-06", "Run"),
+      row(3, "2026-08-20", "Run"),
+    ]);
+    await page.getByTestId("from-date").fill("2026-09-01");
+    await page.getByTestId("to-date").fill("2026-09-06");
+    await expect.element(page.getByText("Run 1")).toBeInTheDocument();
+    await expect.element(page.getByText("Run 2")).toBeInTheDocument();
+    await expect.element(page.getByText("Run 3")).not.toBeInTheDocument();
+  });
+
+  it("combines a name search with a sport filter", async () => {
+    await mount([
+      row(1, "2026-09-06", "Run"),
+      row(2, "2026-09-06", "Ride"),
+    ]);
+    await page.getByRole("button", { name: "Ride" }).click();
+    await page.getByRole("searchbox", { name: "Search activities" }).fill("nonexistent");
+    await expect.element(page.getByText(/no activities match your filters/i)).toBeInTheDocument();
+    await expect.element(page.getByText("Ride 2")).not.toBeInTheDocument();
   });
 
   it("keeps the active-days stat as a lifetime total when a filter is applied", async () => {
