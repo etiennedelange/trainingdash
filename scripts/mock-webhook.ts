@@ -19,8 +19,18 @@
  * athlete if you want create/update to actually fetch+upsert; otherwise
  * this only exercises the ack path (still useful — it's most of what
  * webhook.test.ts already covers offline).
+ *
+ * Pass --real instead of --owner-id/--object-id to auto-fill both from your
+ * local D1 (the connected athlete row + your most recent activity), so
+ * create/update trigger a genuine Strava fetch+upsert+broadcast without you
+ * having to look ids up by hand:
+ *
+ *   pnpm webhook:update
+ *   pnpm webhook:delete
+ *   pnpm webhook:create
  */
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 
 function loadEnv(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -47,10 +57,11 @@ interface Flags {
   objectId?: number;
   ownerId?: number;
   count: number;
+  real: boolean;
 }
 
 function parseArgs(argv: string[]): Flags {
-  const flags: Flags = { url: "http://localhost:5173/webhook", count: 1 };
+  const flags: Flags = { url: "http://localhost:5173/webhook", count: 1, real: false };
   const rest: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -70,12 +81,47 @@ function parseArgs(argv: string[]): Flags {
       case "--count":
         flags.count = Number(argv[++i]);
         break;
+      case "--real":
+        flags.real = true;
+        break;
       default:
         rest.push(arg);
     }
   }
   if (rest[0]) flags.url = rest[0];
   return flags;
+}
+
+/** Runs a read-only query against the local D1 database via wrangler. */
+function queryLocalD1<T>(sql: string): T[] {
+  const out = execFileSync("npx", ["wrangler", "d1", "execute", "trainingdash", "--local", "--json", "--command", sql], {
+    encoding: "utf8",
+  });
+  const [{ results }] = JSON.parse(out) as [{ results: T[] }];
+  return results;
+}
+
+/** Fills owner-id/object-id from the connected athlete + their latest activity in local D1. */
+function fillFromLocalD1(flags: Flags): void {
+  if (!flags.ownerId) {
+    const [athlete] = queryLocalD1<{ id: number }>("SELECT id FROM athlete LIMIT 1");
+    if (!athlete) {
+      console.error("No athlete connected in local D1 — connect one first, or pass --owner-id.");
+      process.exit(1);
+    }
+    flags.ownerId = athlete.id;
+  }
+  if (!flags.objectId) {
+    const [activity] = queryLocalD1<{ id: number; name: string }>(
+      "SELECT id, name FROM activities ORDER BY start_date DESC, id DESC LIMIT 1",
+    );
+    if (!activity) {
+      console.error("No activities in local D1 — sync one first, or pass --object-id.");
+      process.exit(1);
+    }
+    flags.objectId = activity.id;
+    console.log(`Using latest local activity: ${activity.id} (${activity.name})`);
+  }
 }
 
 const ASPECTS = ["create", "update", "delete"] as const;
@@ -117,6 +163,8 @@ async function send(url: string, event: ReturnType<typeof buildEvent>): Promise<
 }
 
 const flags = parseArgs(process.argv.slice(2));
+if (flags.real) fillFromLocalD1(flags);
+
 const base = flags.url.replace(/\/$/, "");
 const target = base.endsWith(`/${verifyToken}`) ? base : `${base}/${verifyToken}`;
 
