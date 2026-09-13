@@ -27,7 +27,7 @@ export const SPORT_CATEGORY_LABEL: Record<SportCategory, string> = {
   strength: "Strength",
 };
 
-const CATEGORY_COLOR: Record<SportCategory, string> = {
+export const CATEGORY_COLOR: Record<SportCategory, string> = {
   run: "bg-run",
   ride: "bg-ride",
   walk: "bg-walk",
