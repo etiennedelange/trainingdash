@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { Today } from "./index";
 import type { ActivitySummary } from "#shared/types";
+import type { Me } from "@/lib/queries";
 import { HeroArrivalContext } from "@/hooks/useLiveUpdates";
 
 const testRouter = createRouter({
@@ -27,15 +28,24 @@ const rows: ActivitySummary[] = [
   },
 ];
 
+const importingMe: Me = {
+  athleteId: 1,
+  connected: true,
+  backfill: { page: 2, complete: false, last_error: null },
+  vapidPublicKey: "",
+};
+
 function mount(
   data: ActivitySummary[],
   hero: { activity: ActivitySummary | null; dismiss: () => void } = {
     activity: null,
     dismiss: () => {},
   },
+  me?: Me,
 ) {
   const client = new QueryClient();
   client.setQueryData(["activities"], data);
+  if (me) client.setQueryData(["me"], me);
   return render(
     <RouterContextProvider router={testRouter}>
       <QueryClientProvider client={client}>
@@ -71,5 +81,18 @@ describe("Today", () => {
     // Today merges it in, so the this-week stat is immediately correct.
     await mount([], { activity: rows[0]!, dismiss: vi.fn() });
     await expect.element(page.getByText(/6\.42/).first()).toBeInTheDocument();
+  });
+
+  it("shows import progress while the backfill is running", async () => {
+    await mount(rows, undefined, importingMe);
+    await expect.element(page.getByText(/importing your history/i)).toBeInTheDocument();
+    await expect.element(page.getByText(/1 activities/i)).toBeInTheDocument();
+  });
+
+  it("keeps showing import progress instead of the empty state with zero rows", async () => {
+    await mount([], undefined, importingMe);
+    await expect.element(page.getByText(/importing your history/i)).toBeInTheDocument();
+    await expect.element(page.getByText(/0 activities/i)).toBeInTheDocument();
+    await expect.element(page.getByText(/no activities yet/i)).not.toBeInTheDocument();
   });
 });

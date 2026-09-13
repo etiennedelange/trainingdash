@@ -8,10 +8,12 @@ import { SPORT_CATEGORY, SPORT_CATEGORY_LABEL } from "./ActivityRow";
 /** What a just-arrived activity means, computed from the athlete's history:
  *  this week's frame plus the running streak it just extended. `goalKm` is the
  *  weekly distance target, when one is set — the concrete "how much is left"
- *  framing that replaces a purely comparative one. */
+ *  framing that replaces a purely comparative one. `newRecords` lists the
+ *  personal records this activity just set, if any. */
 export interface ArrivalHeroContext extends WeekComparison {
   streak: number;
   goalKm?: number | null;
+  newRecords?: string[];
 }
 
 /**
@@ -73,11 +75,21 @@ export function ArrivalHero({
 
       {context ? (
         <div className="mt-4 border-t border-line pt-3">
-          {context.isBestWeek ? (
-            <p className="mb-2 inline-flex rounded-[var(--radius-control)] bg-accent/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-accent uppercase">
-              Best week yet
-            </p>
-          ) : null}
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {context.isBestWeek ? (
+              <span className="inline-flex rounded-[var(--radius-control)] bg-accent/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-accent uppercase">
+                Best week yet
+              </span>
+            ) : null}
+            {context.newRecords?.map((label) => (
+              <span
+                key={label}
+                className="inline-flex rounded-[var(--radius-control)] bg-accent/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-accent uppercase"
+              >
+                New record · {label}
+              </span>
+            ))}
+          </div>
 
           {context.goalKm ? (
             <div className="mb-3">
