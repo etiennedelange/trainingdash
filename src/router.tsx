@@ -5,6 +5,7 @@ import { Route as activitiesRoute } from "./routes/activities";
 import { Route as progressRoute } from "./routes/progress";
 import { Route as activityDetailRoute } from "./routes/activity.$id";
 import { Route as coachRoute } from "./routes/coach";
+import { Route as debugRoute } from "./routes/debug";
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -12,6 +13,7 @@ const routeTree = rootRoute.addChildren([
   progressRoute,
   activityDetailRoute,
   coachRoute,
+  debugRoute,
 ]);
 
 export const router = createRouter({ routeTree });

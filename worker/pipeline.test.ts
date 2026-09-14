@@ -97,6 +97,50 @@ describe("webhook to websocket", () => {
     if (msg.type === "activity.upsert") {
       expect(msg.activity.name).toBe("Evening Run");
       expect(msg.activity.local_date).toBe("2026-09-05");
+      expect(msg.aspect).toBe("create");
+    }
+  });
+
+  it("marks an edit (e.g. a rename) as an update, not a new arrival", async () => {
+    const cookie = `sd_session=${await signSession(42, env.SESSION_SECRET)}`;
+
+    const upgrade = await SELF.fetch("http://example.com/live", {
+      headers: { Cookie: cookie, Upgrade: "websocket" },
+    });
+    const ws = upgrade.webSocket;
+    expect(ws).toBeTruthy();
+    ws!.accept();
+
+    const received = new Promise<string>((resolve) => {
+      ws!.addEventListener("message", (e) => resolve(String(e.data)), { once: true });
+    });
+
+    expectFetch({
+      path: "/api/v3/activities/7", method: "GET", status: 200,
+      body: {
+        id: 7, name: "Evening Run (renamed)", sport_type: "Run",
+        start_date: "2026-09-05T16:41:00Z", start_date_local: "2026-09-05T18:41:00Z",
+        elapsed_time: 2052, moving_time: 2052, distance: 6420,
+      },
+    });
+
+    const ack = await SELF.fetch(
+      `http://example.com/webhook/${env.STRAVA_VERIFY_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          object_type: "activity", object_id: 7, aspect_type: "update",
+          owner_id: 42, subscription_id: 1, event_time: 1, updates: { title: "renamed" },
+        }),
+      },
+    );
+    expect(ack.status).toBe(200);
+
+    const msg = JSON.parse(await received) as LiveMessage;
+    expect(msg.type).toBe("activity.upsert");
+    if (msg.type === "activity.upsert") {
+      expect(msg.aspect).toBe("update");
     }
   });
 });

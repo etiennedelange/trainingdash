@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { ActivitySummary, ActivityDetail, BackfillState } from "#shared/types";
+import type { ActivitySummary, ActivityDetail, BackfillState, WebhookEventLog } from "#shared/types";
 import { apiGet } from "./api";
 
 export interface Me {
@@ -14,6 +14,7 @@ export const queryKeys = {
   activities: ["activities"] as const,
   activity: (id: number) => ["activity", id] as const,
   coachKey: ["coach", "key"] as const,
+  webhookEvents: ["webhook-events"] as const,
 };
 
 export const meQuery = queryOptions({
@@ -42,4 +43,10 @@ export interface CoachKeyStatus {
 export const coachKeyQuery = queryOptions({
   queryKey: queryKeys.coachKey,
   queryFn: () => apiGet<CoachKeyStatus>("/api/coach/key"),
+});
+
+export const webhookEventsQuery = queryOptions({
+  queryKey: queryKeys.webhookEvents,
+  queryFn: () => apiGet<WebhookEventLog[]>("/api/webhook-events"),
+  refetchInterval: 5000,
 });

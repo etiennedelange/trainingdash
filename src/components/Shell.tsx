@@ -10,6 +10,7 @@ const NAV = [
   { key: "activities", label: "Activities", to: "/activities", showsArrivals: true },
   { key: "progress", label: "Progress", to: "/progress", showsArrivals: false },
   { key: "coach", label: "Coach", to: "/coach", showsArrivals: false },
+  { key: "debug", label: "Debug", to: "/debug", showsArrivals: false },
 ] as const;
 
 function Logo() {

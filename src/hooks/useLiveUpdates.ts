@@ -9,6 +9,11 @@ const MAX_BACKOFF = 30_000;
 // register as an event, short enough that it never reads as a permanent state.
 const ARRIVAL_TTL = 2_600;
 
+// A webhook update (e.g. renaming an activity on Strava) is real-time too,
+// but it isn't news — no badge, no hero, no push. Just a quick grid glow, so
+// the row visibly reflects that something changed without claiming arrival.
+const UPDATE_TTL = 1_200;
+
 /**
  * Holds the live socket. The socket is an optimisation, never the source of
  * truth: every path here ends in invalidating the activities cache, so a
@@ -18,6 +23,7 @@ export function useLiveUpdates(): {
   connected: boolean;
   authenticated: boolean;
   arrivedIds: Set<number>;
+  updatedIds: Set<number>;
   lastArrivalName: string | null;
   heroArrival: ActivityRow | null;
   dismissHero: () => void;
@@ -29,6 +35,7 @@ export function useLiveUpdates(): {
   const { isSuccess: authenticated } = useQuery(meQuery);
   const [connected, setConnected] = useState(false);
   const [arrivedIds, setArrivedIds] = useState<Set<number>>(() => new Set());
+  const [updatedIds, setUpdatedIds] = useState<Set<number>>(() => new Set());
   const [lastArrivalName, setLastArrivalName] = useState<string | null>(null);
   // Unlike arrivedIds/lastArrivalName (which expire after ARRIVAL_TTL to drive
   // the row-level glow), this persists until the athlete dismisses it or
@@ -72,7 +79,7 @@ export function useLiveUpdates(): {
         } catch {
           return;
         }
-        if (msg.type === "activity.upsert") {
+        if (msg.type === "activity.upsert" && msg.aspect === "create") {
           const id = msg.activity.id;
           setArrivedIds((prev) => new Set(prev).add(id));
           setLastArrivalName(msg.activity.name);
@@ -87,6 +94,19 @@ export function useLiveUpdates(): {
             });
             setLastArrivalName(null);
           }, ARRIVAL_TTL);
+        }
+        if (msg.type === "activity.upsert" && msg.aspect === "update") {
+          const id = msg.activity.id;
+          setUpdatedIds((prev) => new Set(prev).add(id));
+          setTimeout(() => {
+            if (disposed) return;
+            setUpdatedIds((prev) => {
+              if (!prev.has(id)) return prev;
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+          }, UPDATE_TTL);
         }
         if (msg.type === "activity.upsert" || msg.type === "activity.delete") {
           refetch();
@@ -116,10 +136,11 @@ export function useLiveUpdates(): {
     };
   }, [queryClient, authenticated]);
 
-  return { connected, authenticated, arrivedIds, lastArrivalName, heroArrival, dismissHero };
+  return { connected, authenticated, arrivedIds, updatedIds, lastArrivalName, heroArrival, dismissHero };
 }
 
 const LiveArrivalsContext = createContext<Set<number>>(new Set());
+const LiveUpdatesContext = createContext<Set<number>>(new Set());
 const LiveStatusContext = createContext<{
   connected: boolean;
   authenticated: boolean;
@@ -144,7 +165,7 @@ export const HeroArrivalContext = createContext<{
  * every route re-deriving its own socket connection.
  */
 export function LiveArrivalsProvider({ children }: { children: ReactNode }) {
-  const { connected, authenticated, arrivedIds, lastArrivalName, heroArrival, dismissHero } =
+  const { connected, authenticated, arrivedIds, updatedIds, lastArrivalName, heroArrival, dismissHero } =
     useLiveUpdates();
   return createElement(
     LiveStatusContext.Provider,
@@ -153,9 +174,13 @@ export function LiveArrivalsProvider({ children }: { children: ReactNode }) {
       LiveArrivalsContext.Provider,
       { value: arrivedIds },
       createElement(
-        HeroArrivalContext.Provider,
-        { value: { activity: heroArrival, dismiss: dismissHero } },
-        children,
+        LiveUpdatesContext.Provider,
+        { value: updatedIds },
+        createElement(
+          HeroArrivalContext.Provider,
+          { value: { activity: heroArrival, dismiss: dismissHero } },
+          children,
+        ),
       ),
     ),
   );
@@ -163,6 +188,12 @@ export function LiveArrivalsProvider({ children }: { children: ReactNode }) {
 
 export function useJustArrived(activityId: number): boolean {
   return useContext(LiveArrivalsContext).has(activityId);
+}
+
+/** Whether this activity was just touched by a webhook *update* (not a new
+ *  arrival) — drives the subtle grid glow instead of the "new" badge/hero. */
+export function useJustUpdated(activityId: number): boolean {
+  return useContext(LiveUpdatesContext).has(activityId);
 }
 
 /** Whether any activity is currently flagged "just arrived," for a nav-level cue. */

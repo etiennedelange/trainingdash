@@ -12,6 +12,13 @@ export default defineConfig({
     VitePWA({
       registerType: "prompt",
       includeAssets: ["favicon.svg", "icon-192.png", "icon-512.png"],
+      // Without this, vite-plugin-pwa only registers a service worker in
+      // production builds — Chrome then has no SW to base installability on,
+      // so the omnibox install icon never appears while running `pnpm dev`.
+      devOptions: {
+        enabled: true,
+        type: "module",
+      },
       manifest: {
         name: "Trainingdash",
         short_name: "Trainingdash",

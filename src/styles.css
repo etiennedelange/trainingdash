@@ -113,9 +113,21 @@ button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: poi
 }
 .animate-arrival { animation: toast-in .5s cubic-bezier(.2,.8,.2,1) both, arrival-glow 2.5s ease-out both; }
 
+/*
+ * A webhook *update* (renaming on Strava, etc.) is real-time but not news —
+ * no slide-in, no badge, no warm gradient. A quick, quiet ring in the
+ * existing accent color, matched to UPDATE_TTL in useLiveUpdates.
+ */
+@keyframes update-glow {
+  0% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 45%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.animate-update { animation: update-glow 1.2s ease-out both; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-toast-in { animation: none; }
   .animate-arrival { animation: none; box-shadow: 0 0 0 2px var(--color-warm-to); }
+  .animate-update { animation: none; }
 }
 
 /*
