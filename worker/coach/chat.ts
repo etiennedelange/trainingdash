@@ -22,7 +22,7 @@ export async function streamCoachReply(
 ): Promise<ReadableStream<Uint8Array>> {
   const client = new Anthropic({ apiKey });
 
-  const stream = (await client.messages.create({
+  const stream = await client.messages.create({
     model: "claude-opus-5",
     max_tokens: 16000,
     thinking: { type: "adaptive" },
@@ -33,10 +33,7 @@ export async function streamCoachReply(
       { type: "text", text: digest, cache_control: { type: "ephemeral" } },
     ],
     messages: turns.map((t) => ({ role: t.role, content: t.content })),
-  })) as unknown as AsyncIterable<{
-    type: string;
-    delta?: { type: string; text?: string };
-  }>;
+  });
 
   const encoder = new TextEncoder();
 
