@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries";
 
 /**
@@ -7,27 +7,33 @@ import { queryKeys } from "@/lib/queries";
  * has no shared/free LLM backend, so Coach stays off until a key is set,
  * either here or as the deploy-time ANTHROPIC_API_KEY secret.
  */
+const KEY_PATTERN = /^sk-ant-/;
+
 export function CoachKeySetup() {
   const queryClient = useQueryClient();
   const [value, setValue] = useState("");
-  const [state, setState] = useState<"idle" | "saving" | "error">("idle");
+  const [touched, setTouched] = useState(false);
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    setState("saving");
-    const res = await fetch("/api/coach/key", {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ apiKey: value.trim() }),
-    });
-    if (!res.ok) {
-      setState("error");
-      return;
-    }
-    setValue("");
-    await queryClient.invalidateQueries({ queryKey: queryKeys.coachKey });
-  }
+  const trimmed = value.trim();
+  const formatInvalid = touched && trimmed.length > 0 && !KEY_PATTERN.test(trimmed);
+
+  const saveKey = useMutation({
+    mutationFn: async (apiKey: string) => {
+      if (!KEY_PATTERN.test(apiKey)) throw new Error("That didn't look like a valid Anthropic API key.");
+      const res = await fetch("/api/coach/key", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      });
+      if (!res.ok) throw new Error("That didn't look like a valid Anthropic API key.");
+    },
+    onSuccess: async () => {
+      setValue("");
+      setTouched(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.coachKey });
+    },
+  });
 
   return (
     <div className="max-w-md">
@@ -36,27 +42,45 @@ export function CoachKeySetup() {
         Paste it below; it's stored encrypted and used only server-side to answer your questions.
       </p>
 
-      <form onSubmit={(e) => void save(e)} className="mt-4 flex flex-col gap-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setTouched(true);
+          saveKey.mutate(trimmed);
+        }}
+        className="mt-4 flex flex-col gap-2"
+      >
         <input
           type="password"
+          autoComplete="new-password"
+          required
+          pattern="sk-ant-.*"
+          title="Anthropic API keys start with sk-ant-"
+          disabled={saveKey.isPending}
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
-            if (state === "error") setState("idle");
+            if (saveKey.isError) saveKey.reset();
           }}
+          onBlur={() => setTouched(true)}
           placeholder="sk-ant-…"
           aria-label="Anthropic API key"
-          className="rounded-[var(--radius-control)] border border-line bg-card px-3 py-2.5 text-sm outline-none focus:border-accent"
+          aria-invalid={formatInvalid || saveKey.isError ? true : undefined}
+          aria-describedby={saveKey.isError ? "coach-key-error" : undefined}
+          className="rounded-[var(--radius-control)] border border-line bg-card px-3 py-2.5 text-sm outline-none focus:border-accent aria-[invalid=true]:border-danger disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={state === "saving" || !value.trim()}
+          disabled={saveKey.isPending || !value.trim()}
+          aria-busy={saveKey.isPending}
           className="self-start rounded-[var(--radius-control)] bg-accent px-5 py-2 text-sm font-bold text-on-accent disabled:opacity-40"
         >
-          {state === "saving" ? "Saving…" : "Save key"}
+          {saveKey.isPending ? "Saving…" : "Save key"}
         </button>
-        {state === "error" ? (
-          <p className="text-xs text-danger">That didn't look like a valid Anthropic API key.</p>
+        {saveKey.isError ? (
+          <p id="coach-key-error" role="alert" className="text-xs text-danger">
+            That didn't look like a valid Anthropic API key.
+          </p>
         ) : null}
       </form>
 
