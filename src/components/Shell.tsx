@@ -57,6 +57,7 @@ export function Shell({
       ) : null}
 
       <nav
+        id="primary-nav"
         aria-label="Primary"
         className={clsx(
           "fixed inset-y-0 left-0 z-40 flex w-[220px] flex-none flex-col gap-1 overflow-y-auto border-r border-line bg-surface p-4 transition-transform duration-200 sm:sticky sm:top-0 sm:h-screen sm:translate-x-0",
@@ -103,6 +104,8 @@ export function Shell({
           <button
             type="button"
             aria-label="Open menu"
+            aria-expanded={mobileOpen}
+            aria-controls="primary-nav"
             onClick={() => setMobileOpen(true)}
             className="flex size-9 items-center justify-center rounded-[var(--radius-control)] text-muted hover:bg-raised"
           >

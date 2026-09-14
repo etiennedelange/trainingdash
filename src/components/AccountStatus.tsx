@@ -42,7 +42,11 @@ export function AccountStatus() {
       >
         {logout.isPending ? "Logging out…" : "Log out"}
       </button>
-      {logout.isError ? <p className="px-3 text-xs text-danger">Couldn't log out. Try again.</p> : null}
+      {logout.isError ? (
+        <p role="alert" className="px-3 text-xs text-danger">
+          Couldn't log out. Try again.
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -23,6 +23,7 @@ export function Activities({ today }: { today: string }) {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const { data, isPending, isError, error, refetch } = useQuery(activitiesQuery);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   if (isPending) return <LoadingState />;
   if (isError) return <DataError error={error} onRetry={() => void refetch()} subject="activities" />;
@@ -63,12 +64,32 @@ export function Activities({ today }: { today: string }) {
         <StatTile label="activities" value={String(data.length)} />
       </div>
 
-      <div role="tablist" className="mt-8 flex gap-2">
-        {TABS.map((t) => (
+      <div
+        role="tablist"
+        aria-label="Activities view"
+        className="mt-8 flex gap-2"
+        onKeyDown={(e) => {
+          if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End") return;
+          e.preventDefault();
+          const i = TABS.indexOf(tab);
+          const next =
+            e.key === "ArrowRight" ? (i + 1) % TABS.length
+            : e.key === "ArrowLeft" ? (i - 1 + TABS.length) % TABS.length
+            : e.key === "Home" ? 0
+            : TABS.length - 1;
+          setTab(TABS[next]!);
+          tabRefs.current[next]?.focus();
+        }}
+      >
+        {TABS.map((t, i) => (
           <button
             key={t}
+            ref={(el) => {
+              tabRefs.current[i] = el;
+            }}
             role="tab"
             aria-selected={tab === t}
+            tabIndex={tab === t ? 0 : -1}
             onClick={() => setTab(t)}
             className={clsx(
               "rounded-[var(--radius-control)] px-4 py-2 text-xs font-bold transition-colors",

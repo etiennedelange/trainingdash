@@ -19,6 +19,7 @@ export function Coach() {
   const [draft, setDraft] = useState("");
   const queryClient = useQueryClient();
   const { data: keyStatus, isPending: keyPending } = useQuery(coachKeyQuery);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
 
   async function submit(question: string) {
     setDraft("");
@@ -26,6 +27,7 @@ export function Coach() {
   }
 
   async function removeKey() {
+    setConfirmingRemove(false);
     await fetch("/api/coach/key", { method: "DELETE", credentials: "same-origin" });
     await queryClient.invalidateQueries({ queryKey: queryKeys.coachKey });
   }
@@ -48,12 +50,24 @@ export function Coach() {
       <div className="flex items-baseline justify-between">
         <h1 className="font-display text-[27px] font-bold">Coach</h1>
         {keyStatus.source === "byok" ? (
-          <button
-            onClick={() => void removeKey()}
-            className="text-xs font-semibold text-muted hover:text-text"
-          >
-            Remove API key
-          </button>
+          confirmingRemove ? (
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span className="text-muted">Remove your saved key?</span>
+              <button onClick={() => void removeKey()} className="text-danger hover:underline">
+                Confirm
+              </button>
+              <button onClick={() => setConfirmingRemove(false)} className="text-muted hover:text-text">
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingRemove(true)}
+              className="text-xs font-semibold text-muted hover:text-text"
+            >
+              Remove API key
+            </button>
+          )
         ) : null}
       </div>
       <p className="mt-1 text-sm text-muted">Insights drawn from your last 30 days</p>
@@ -96,7 +110,11 @@ export function Coach() {
           </div>
         )}
 
-        {error ? <p className="mt-4 font-mono text-xs text-danger">! {error}</p> : null}
+        {error ? (
+          <p role="alert" className="mt-4 font-mono text-xs text-danger">
+            ! {error}
+          </p>
+        ) : null}
       </div>
 
       <form
@@ -113,16 +131,19 @@ export function Coach() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           disabled={streaming}
+          required
+          minLength={1}
           placeholder="Ask about your training…"
           aria-label="Ask about your training"
-          className="flex-1 bg-transparent py-3 text-sm outline-none"
+          className="flex-1 bg-transparent py-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:-outline-offset-1"
         />
         <button
           type="submit"
           disabled={streaming || !draft.trim()}
+          aria-busy={streaming}
           className="rounded-[var(--radius-control)] bg-accent px-5 py-2 text-sm font-bold text-on-accent disabled:opacity-40"
         >
-          Ask
+          {streaming ? "Asking…" : "Ask"}
         </button>
       </form>
     </div>

@@ -30,6 +30,8 @@ export function CommandPalette() {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<Element | null>(null);
   const { data } = useQuery(activitiesQuery);
   const navigate = useNavigate();
 
@@ -48,10 +50,14 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (!open) return;
+    triggerRef.current = document.activeElement;
     setQuery("");
     setActiveIndex(0);
     // A frame lets the input mount before focusing.
     requestAnimationFrame(() => inputRef.current?.focus());
+    return () => {
+      if (triggerRef.current instanceof HTMLElement) triggerRef.current.focus();
+    };
   }, [open]);
 
   const items = useMemo<PaletteItem[]>(() => {
@@ -95,6 +101,25 @@ export function CommandPalette() {
     }
     if (e.key === "Enter" && items[activeIndex]) {
       go(items[activeIndex]);
+      return;
+    }
+    if (e.key === "Tab") {
+      // Trap focus inside the panel — this is a custom overlay, not a
+      // native <dialog>, so nothing else keeps Tab from leaking to the
+      // page underneath.
+      const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable || focusable.length === 0) return;
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   }
 
@@ -106,8 +131,13 @@ export function CommandPalette() {
       className="fixed inset-0 z-50 flex justify-center px-4 pt-[15vh]"
       onKeyDown={onKeyDown}
     >
-      <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-hidden="true" />
-      <div className="relative w-full max-w-xl self-start rounded-[var(--radius-card)] border border-line bg-card shadow-2xl">
+      <button
+        type="button"
+        aria-label="Close command palette"
+        className="absolute inset-0 bg-black/40"
+        onClick={() => setOpen(false)}
+      />
+      <div ref={panelRef} className="relative w-full max-w-xl self-start rounded-[var(--radius-card)] border border-line bg-card shadow-2xl">
         <div className="flex items-center gap-2 border-b border-line px-4">
           <span aria-hidden="true" className="font-mono text-sm font-bold text-accent">
             &gt;
@@ -119,7 +149,7 @@ export function CommandPalette() {
             placeholder="Jump to an activity or page…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent py-3 text-sm text-text outline-none placeholder:text-faint"
+            className="min-w-0 flex-1 bg-transparent py-3 text-sm text-text outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:-outline-offset-1 placeholder:text-faint"
           />
         </div>
 
