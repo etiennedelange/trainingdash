@@ -4,8 +4,8 @@ const COLUMNS = `id, name, sport_type, start_date, local_date, elapsed_time,
   moving_time, distance, total_elevation_gain, average_speed, average_heartrate,
   suffer_score, polyline, raw, updated_at`;
 
-export async function upsertActivity(db: D1Database, row: ActivityRow): Promise<void> {
-  await db
+export function upsertActivityStatement(db: D1Database, row: ActivityRow): D1PreparedStatement {
+  return db
     .prepare(
       `INSERT INTO activities (${COLUMNS})
        VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)
@@ -23,8 +23,11 @@ export async function upsertActivity(db: D1Database, row: ActivityRow): Promise<
       row.elapsed_time, row.moving_time, row.distance, row.total_elevation_gain,
       row.average_speed, row.average_heartrate, row.suffer_score, row.polyline,
       row.raw, row.updated_at,
-    )
-    .run();
+    );
+}
+
+export async function upsertActivity(db: D1Database, row: ActivityRow): Promise<void> {
+  await upsertActivityStatement(db, row).run();
 }
 
 export async function deleteActivity(db: D1Database, id: number): Promise<void> {

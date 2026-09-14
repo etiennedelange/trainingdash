@@ -2,10 +2,18 @@ import type { Env } from "../env";
 import type { BackfillState } from "#shared/types";
 import { StravaClient, RateLimitError, isNearLimit } from "../strava/client";
 import { toRow } from "../strava/map";
-import { upsertActivity } from "../db/activities";
+import { upsertActivityStatement } from "../db/activities";
 import { getBackfillState, setBackfillState } from "../db/sync";
 
 export const PER_PAGE = 200;
+
+// A hard ceiling on how long one invocation keeps paging, independent of
+// Strava's own rate-limit signals: the platform's own CPU/wall-clock limits
+// can kill a long-running invocation outright, before it ever gets a chance
+// to persist state or hit isNearLimit — which used to leave the backfill
+// silently wedged, re-doing (and never getting past) the same first page on
+// every retry. Bailing out early and saving progress keeps that recoverable.
+const TIME_BUDGET_MS = 20_000;
 
 /**
  * Imports history newest-first, saving the resume point after every page.
@@ -22,6 +30,7 @@ export async function runBackfill(env: Env, client: StravaClient): Promise<Backf
   if (state.complete) return state;
 
   let page = state.page;
+  const deadline = Date.now() + TIME_BUDGET_MS;
 
   for (;;) {
     let batch;
@@ -37,8 +46,12 @@ export async function runBackfill(env: Env, client: StravaClient): Promise<Backf
       return next;
     }
 
-    for (const a of batch) {
-      await upsertActivity(env.DB, toRow(a));
+    // One round trip per page rather than one per activity: besides being
+    // far cheaper, it's what keeps a full page's worth of writes from
+    // running the invocation past its time budget before it can save
+    // progress.
+    if (batch.length > 0) {
+      await env.DB.batch(batch.map((a) => upsertActivityStatement(env.DB, toRow(a))));
     }
 
     if (batch.length === 0) {
@@ -59,6 +72,9 @@ export async function runBackfill(env: Env, client: StravaClient): Promise<Backf
       return paused;
     }
 
-    await setBackfillState(env.DB, { page, complete: false, last_error: null });
+    const next: BackfillState = { page, complete: false, last_error: null };
+    await setBackfillState(env.DB, next);
+
+    if (Date.now() > deadline) return next;
   }
 }
