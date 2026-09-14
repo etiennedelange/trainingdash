@@ -5,10 +5,20 @@ import type { StravaActivity } from "../strava/types";
 import { requireSession } from "../middleware/require-session";
 import { getAthlete } from "../db/athlete";
 import { listActivities, getActivity } from "../db/activities";
-import { getBackfillState } from "../db/sync";
+import { getBackfillState, getLastBackfillAttempt, markBackfillAttempt } from "../db/sync";
 import { savePushSubscription } from "../db/push";
 import { listWebhookEvents } from "../db/webhook-log";
+import { StravaClient } from "../strava/client";
+import { runBackfill } from "../sync/backfill";
 import coach from "./coach";
+
+// The scheduled Cron Trigger is meant to resume an interrupted backfill, but
+// it depends on the platform actually firing it — which isn't guaranteed for
+// every account. Piggybacking a continuation attempt on ordinary traffic
+// (the client already polls /api/me every few seconds while importing) is a
+// more reliable fallback. The cooldown keeps that from re-hitting Strava on
+// every single poll.
+const BACKFILL_RETRY_COOLDOWN_MS = 15_000;
 
 const api = new Hono<{ Bindings: Env; Variables: { athleteId: number } }>();
 
@@ -45,10 +55,26 @@ api.use("*", requireSession);
 
 api.get("/me", async (c) => {
   const athlete = await getAthlete(c.env.DB);
+  const backfill = await getBackfillState(c.env.DB);
+
+  if (athlete?.connected && !backfill.complete) {
+    const last = await getLastBackfillAttempt(c.env.DB);
+    const now = Date.now();
+    if (now - last > BACKFILL_RETRY_COOLDOWN_MS) {
+      await markBackfillAttempt(c.env.DB, now);
+      c.executionCtx.waitUntil(
+        (async () => {
+          const client = await StravaClient.create(c.env);
+          if (client) await runBackfill(c.env, client);
+        })().catch((err) => console.error("backfill continuation failed", err)),
+      );
+    }
+  }
+
   return c.json({
     athleteId: c.get("athleteId"),
     connected: athlete?.connected ?? false,
-    backfill: await getBackfillState(c.env.DB),
+    backfill,
     vapidPublicKey: c.env.VAPID_PUBLIC_KEY,
   });
 });
