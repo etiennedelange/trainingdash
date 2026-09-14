@@ -15,7 +15,7 @@ const SUGGESTIONS = [
 ];
 
 export function Coach() {
-  const { turns, ask, streaming, error } = useCoachStream();
+  const { turns, ask, isPending, error } = useCoachStream();
   const [draft, setDraft] = useState("");
   const queryClient = useQueryClient();
   const { data: keyStatus, isPending: keyPending } = useQuery(coachKeyQuery);
@@ -75,11 +75,13 @@ export function Coach() {
       <div className="mt-6 flex-1 overflow-y-auto">
         {turns.length === 0 ? (
           <div className="flex max-w-2xl flex-col gap-1.5">
+            <p className="text-sm text-muted">Nothing here yet — ask about your training or pick a prompt.</p>
             {SUGGESTIONS.map((s) => (
               <button
                 key={s}
                 onClick={() => void submit(s)}
-                className="rounded-[var(--radius-control)] px-2 py-1.5 text-left font-mono text-xs text-muted hover:bg-raised hover:text-text"
+                disabled={isPending}
+                className="rounded-[var(--radius-control)] px-2 py-1.5 text-left font-mono text-xs text-muted hover:bg-raised hover:text-text disabled:opacity-40"
               >
                 <span className="text-accent">&gt; </span>
                 {s}
@@ -99,7 +101,7 @@ export function Coach() {
                 <p className="text-sm whitespace-pre-wrap text-text">{t.content}</p>
               </div>
             ))}
-            {streaming ? (
+            {isPending ? (
               <div className="flex gap-3 py-4">
                 <span aria-hidden="true" className="mt-0.5 flex-none font-mono text-xs font-bold text-accent">
                   ·
@@ -130,7 +132,7 @@ export function Coach() {
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          disabled={streaming}
+          disabled={isPending}
           required
           minLength={1}
           placeholder="Ask about your training…"
@@ -139,11 +141,11 @@ export function Coach() {
         />
         <button
           type="submit"
-          disabled={streaming || !draft.trim()}
-          aria-busy={streaming}
+          disabled={isPending || !draft.trim()}
+          aria-busy={isPending}
           className="rounded-[var(--radius-control)] bg-accent px-5 py-2 text-sm font-bold text-on-accent disabled:opacity-40"
         >
-          {streaming ? "Asking…" : "Ask"}
+          {isPending ? "Asking…" : "Ask"}
         </button>
       </form>
     </div>

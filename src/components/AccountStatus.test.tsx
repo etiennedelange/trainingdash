@@ -31,8 +31,9 @@ function mount(me: unknown) {
 }
 
 describe("AccountStatus", () => {
-  it("renders nothing when not connected — the main content carries the one Connect CTA", async () => {
+  it("shows a quiet empty state when not connected — the main content carries the one Connect CTA", async () => {
     await mount({ athleteId: 1, connected: false, backfill: { page: 0, complete: false, last_error: null }, vapidPublicKey: "x" });
+    await expect.element(page.getByText(/no data yet/i)).toBeInTheDocument();
     await expect.element(page.getByRole("link", { name: "Connect Strava" })).not.toBeInTheDocument();
     await expect.element(page.getByRole("button", { name: "Log out" })).not.toBeInTheDocument();
   });

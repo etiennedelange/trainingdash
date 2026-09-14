@@ -17,10 +17,17 @@ function RootLayout() {
 
   return (
     <LiveArrivalsProvider>
-      <Shell activeKey={activeKey} footer={<AccountStatus />}>
+      <Shell
+        activeKey={activeKey}
+        footer={
+          <div className="flex flex-col gap-1">
+            <UpdatePrompt />
+            <AccountStatus />
+          </div>
+        }
+      >
         <ArrivalResult />
         <Outlet />
-        <UpdatePrompt />
         <CommandPalette />
       </Shell>
     </LiveArrivalsProvider>

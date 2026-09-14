@@ -48,6 +48,30 @@ describe("Activities", () => {
     await expect.element(page.getByTestId("calendar")).toBeInTheDocument();
   });
 
+  it("navigates the tablist with the keyboard (arrows, Home, End)", async () => {
+    await mount([row(1, "2026-09-06")]);
+    const timeline = page.getByRole("tab", { name: "Timeline" });
+    const calendar = page.getByRole("tab", { name: "Calendar" });
+    const press = async (key: string) => {
+      const el = await timeline.element();
+      el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+    };
+    await timeline.click();
+
+    await press("ArrowRight");
+    await expect.element(calendar).toHaveFocus();
+    await expect.element(page.getByTestId("calendar")).toBeInTheDocument();
+
+    await press("ArrowLeft");
+    await expect.element(timeline).toHaveFocus();
+
+    await press("End");
+    await expect.element(calendar).toHaveFocus();
+
+    await press("Home");
+    await expect.element(timeline).toHaveFocus();
+  });
+
   it("counts distinct active days, not activities", async () => {
     await mount([row(1, "2026-09-06"), row(2, "2026-09-06"), row(3, "2026-09-05")]);
     await expect.element(page.getByTestId("active-days")).toHaveTextContent("2");

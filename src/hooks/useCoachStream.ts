@@ -7,7 +7,7 @@ export interface CoachTurn {
 
 export function useCoachStream() {
   const [turns, setTurns] = useState<CoachTurn[]>([]);
-  const [streaming, setStreaming] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const turnsRef = useRef<CoachTurn[]>([]);
 
@@ -19,7 +19,7 @@ export function useCoachStream() {
     const next: CoachTurn[] = [...turnsRef.current, { role: "user", content: trimmed }];
     turnsRef.current = next;
     setTurns(next);
-    setStreaming(true);
+    setIsPending(true);
 
     try {
       const res = await fetch("/api/coach", {
@@ -68,9 +68,9 @@ export function useCoachStream() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "The coach is unavailable.");
     } finally {
-      setStreaming(false);
+      setIsPending(false);
     }
   }, []);
 
-  return { turns, ask, streaming, error };
+  return { turns, ask, isPending, error };
 }

@@ -157,7 +157,7 @@ function ActivityDetail() {
           <RouteMap
             polyline={data.polyline}
             label={`Route map for ${data.name}`}
-            emptyMessage="No route recorded for this activity."
+            emptyMessage="No data — no route recorded for this activity."
           />
         </Suspense>
         {hasRoute ? (

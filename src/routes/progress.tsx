@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Route as rootRoute } from "./__root";
@@ -45,16 +45,36 @@ function GoalSetter({
   onClear: () => void;
 }) {
   const [draft, setDraft] = useState(goal ? String(goal) : "");
+  const [pendingValue, setPendingValue] = useState<number | null>(null);
+  const isPending = pendingValue !== null;
+  const [lastSaved, setLastSaved] = useState<number | null>(null);
+
+  // The goal write is synchronous, so the pending phase lasts a single commit —
+  // it still disables the trigger and labels the button while the value lands.
+  useEffect(() => {
+    if (pendingValue !== null) setPendingValue(null);
+  }, [pendingValue]);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         const n = Number(draft);
-        if (Number.isFinite(n) && n > 0) onSet(n);
+        if (Number.isFinite(n) && n > 0) {
+          setLastSaved(n);
+          setPendingValue(n);
+          onSet(n);
+        }
       }}
       className="flex items-center gap-2"
     >
+      <span role="status" className="sr-only">
+        {isPending
+          ? "Setting weekly goal…"
+          : lastSaved !== null
+            ? `Weekly goal set to ${lastSaved} km`
+            : ""}
+      </span>
       <label htmlFor="weekly-goal" className="text-xs font-semibold text-muted">
         Weekly goal
       </label>
@@ -66,15 +86,18 @@ function GoalSetter({
         step="0.5"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
+        disabled={isPending}
         placeholder={goal ? String(goal) : "km"}
         aria-label="Weekly distance goal in kilometres"
-        className="w-20 rounded-[var(--radius-control)] border border-line bg-card px-2 py-1 font-mono text-xs text-text outline-none focus:border-accent"
+        className="w-20 rounded-[var(--radius-control)] border border-line bg-card px-2 py-1 font-mono text-xs text-text outline-none focus:border-accent disabled:opacity-60"
       />
       <button
         type="submit"
-        className="rounded-[var(--radius-control)] bg-accent px-3 py-1 text-xs font-bold text-on-accent"
+        disabled={isPending}
+        aria-busy={isPending}
+        className="rounded-[var(--radius-control)] bg-accent px-3 py-1 text-xs font-bold text-on-accent disabled:opacity-40"
       >
-        Set
+        {isPending ? "Setting…" : "Set"}
       </button>
       {goal ? (
         <button
@@ -82,6 +105,7 @@ function GoalSetter({
           onClick={() => {
             onClear();
             setDraft("");
+            setLastSaved(null);
           }}
           className="rounded-[var(--radius-control)] px-2 py-1 text-xs font-semibold text-muted hover:text-text"
         >
