@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -6,12 +6,15 @@ import { Route as rootRoute } from "./__root";
 import { activitiesQuery } from "@/lib/queries";
 import { activeDays, computeStreak, groupByDay } from "#shared/aggregate";
 import { ActivityRow, SPORT_CATEGORY, SPORT_CATEGORY_LABEL, type SportCategory } from "@/components/ActivityRow";
-import { ActivityCalendar } from "@/charts/ActivityCalendar";
 import { StatTile } from "@/components/StatTile";
 import { DataError } from "@/components/DataError";
 import { LoadingState } from "@/components/LoadingState";
 import { formatDayHeading, todayLocalDate } from "@/lib/format";
 import type { ActivitySummary } from "#shared/types";
+
+const ActivityCalendar = lazy(() =>
+  import("@/charts/ActivityCalendar").then((m) => ({ default: m.ActivityCalendar })),
+);
 
 const TABS = ["Timeline", "Calendar"] as const;
 const SPORT_FILTERS: SportCategory[] = ["run", "ride", "walk", "strength"];
@@ -210,7 +213,9 @@ export function Activities({ today }: { today: string }) {
           )
         ) : (
           <div data-testid="calendar">
-            <ActivityCalendar days={days} year={Number(today.slice(0, 4))} />
+            <Suspense fallback={<LoadingState />}>
+              <ActivityCalendar days={days} year={Number(today.slice(0, 4))} />
+            </Suspense>
           </div>
         )}
       </div>
