@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Route as rootRoute } from "./__root";
@@ -12,7 +12,10 @@ import {
   weeklyLoad,
   sportMix,
 } from "#shared/aggregate";
-import { WeeklyDistance } from "@/charts/WeeklyDistance";
+
+const WeeklyDistance = lazy(() =>
+  import("@/charts/WeeklyDistance").then((m) => ({ default: m.WeeklyDistance })),
+);
 import { MixBar } from "@/components/MixBar";
 import { LoadBand } from "@/components/LoadBand";
 import { useWeeklyGoal } from "@/hooks/useWeeklyGoal";
@@ -112,11 +115,13 @@ export function Progress({ today }: { today: string }) {
       <section className="mt-8">
         <h2 className="mb-3 text-sm font-bold text-muted">Distance · last 8 weeks</h2>
         <div className="rounded-[var(--radius-card)] border border-line bg-card p-4 shadow-[var(--shadow-surface)]">
-          <WeeklyDistance
-            buckets={weeklyBuckets(data, 8, today)}
-            averageDistance={load.average?.distance}
-            goalKm={goal}
-          />
+          <Suspense fallback={<LoadingState />}>
+            <WeeklyDistance
+              buckets={weeklyBuckets(data, 8, today)}
+              averageDistance={load.average?.distance}
+              goalKm={goal}
+            />
+          </Suspense>
 
           {goal ? (
             <div className="mt-3 flex items-baseline justify-between border-t border-line pt-3">

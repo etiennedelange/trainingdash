@@ -5,7 +5,10 @@
  *   pnpm webhook create https://<public-host>/webhook
  *   pnpm webhook delete <id>
  *
- * Reads credentials from .dev.vars. `create` automatically appends
+ * Reads credentials from .dev.vars, or from the real environment when a
+ * variable is already set there (e.g. to target prod without editing the
+ * dev file — `STRAVA_VERIFY_TOKEN=<prod token> ... node scripts/webhook.ts
+ * create https://<prod-host>/webhook`). `create` automatically appends
  * `/<STRAVA_VERIFY_TOKEN>` as the callback URL's final path segment — every
  * event delivery (not just subscription validation) replays this same URL,
  * and worker/routes/webhook.ts checks the path segment on every POST since
@@ -22,12 +25,19 @@ const ENDPOINT = "https://www.strava.com/api/v3/push_subscriptions";
 
 function loadEnv(): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const line of readFileSync(".dev.vars", "utf8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    out[trimmed.slice(0, eq)] = trimmed.slice(eq + 1).replace(/^["']|["']$/g, "");
+  try {
+    for (const line of readFileSync(".dev.vars", "utf8").split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      out[trimmed.slice(0, eq)] = trimmed.slice(eq + 1).replace(/^["']|["']$/g, "");
+    }
+  } catch {
+    // .dev.vars is optional when the real environment supplies everything.
+  }
+  for (const key of ["STRAVA_CLIENT_ID", "STRAVA_CLIENT_SECRET", "STRAVA_VERIFY_TOKEN"]) {
+    if (process.env[key]) out[key] = process.env[key]!;
   }
   return out;
 }

@@ -1,9 +1,9 @@
 import { createRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
+import { lazy, Suspense } from "react";
 import { Route as rootRoute } from "./__root";
 import { activityQuery } from "@/lib/queries";
-import { RouteMap } from "@/map/RouteMap";
 import { parsePolyline } from "@/map/polyline";
 import { StatTile } from "@/components/StatTile";
 import { DataError } from "@/components/DataError";
@@ -11,6 +11,8 @@ import { LoadingState } from "@/components/LoadingState";
 import { formatDistance, formatDuration, formatPace } from "@/lib/format";
 import type { ActivityExtra } from "#shared/types";
 import { useJustArrived, useJustUpdated } from "@/hooks/useLiveUpdates";
+
+const RouteMap = lazy(() => import("@/map/RouteMap").then((m) => ({ default: m.RouteMap })));
 
 function hasExtra(extra: ActivityExtra | null): extra is ActivityExtra {
   if (!extra) return false;
@@ -151,11 +153,13 @@ function ActivityDetail() {
       {hasExtra(data.extra) ? <ExtraStats extra={data.extra} /> : null}
 
       <figure className="mt-8 flex min-h-[320px] flex-1 flex-col">
-        <RouteMap
-          polyline={data.polyline}
-          label={`Route map for ${data.name}`}
-          emptyMessage="No route recorded for this activity."
-        />
+        <Suspense fallback={<LoadingState />}>
+          <RouteMap
+            polyline={data.polyline}
+            label={`Route map for ${data.name}`}
+            emptyMessage="No route recorded for this activity."
+          />
+        </Suspense>
         {hasRoute ? (
           <figcaption className="sr-only">
             Route map for {data.name}: {formatDistance(data.distance)} over{" "}
