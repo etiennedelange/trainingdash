@@ -29,7 +29,7 @@ export function UpdatePrompt() {
         aria-hidden="true"
         className="size-1.5 rounded-full bg-gradient-to-r from-warm-from to-warm-to"
       />
-      Update ready
+      Update available
     </button>
   );
 }
