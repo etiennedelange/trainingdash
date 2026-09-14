@@ -12,6 +12,7 @@ function RootLayout() {
     path.startsWith("/activities") ? "activities"
     : path.startsWith("/progress") ? "progress"
     : path.startsWith("/coach") ? "coach"
+    : path.startsWith("/debug") ? "debug"
     : "today";
 
   return (

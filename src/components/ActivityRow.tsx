@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import type { ActivitySummary } from "#shared/types";
 import { formatDistance, formatDuration, formatPace } from "@/lib/format";
-import { useJustArrived } from "@/hooks/useLiveUpdates";
+import { useJustArrived, useJustUpdated } from "@/hooks/useLiveUpdates";
 
 export type SportCategory = "run" | "ride" | "walk" | "strength";
 
@@ -45,6 +45,7 @@ export function ActivityRow({ activity }: { activity: ActivitySummary }) {
     ? activity.moving_time / (activity.distance / 1000)
     : Number.NaN;
   const justArrived = useJustArrived(activity.id);
+  const justUpdated = useJustUpdated(activity.id);
   const category = SPORT_CATEGORY[activity.sport_type];
 
   return (
@@ -54,6 +55,7 @@ export function ActivityRow({ activity }: { activity: ActivitySummary }) {
       className={clsx(
         "flex items-center gap-3 rounded-[var(--radius-row)] border border-line bg-card px-4 py-3 shadow-[var(--shadow-surface)] transition-colors hover:bg-raised",
         justArrived && "animate-arrival",
+        justUpdated && !justArrived && "animate-update",
       )}
     >
       {justArrived ? (

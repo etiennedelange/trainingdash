@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
 import { handleEvent, type StravaWebhookEvent } from "../sync/ingest";
+import { logWebhookEvent } from "../db/webhook-log";
 
 const webhook = new Hono<{ Bindings: Env }>();
 
@@ -21,10 +22,19 @@ webhook.get("/:token", (c) => {
   const mode = c.req.query("hub.mode");
   const token = c.req.query("hub.verify_token");
   const challenge = c.req.query("hub.challenge");
+  const params = new URL(c.req.url).searchParams;
+  if (params.has("hub.verify_token")) params.set("hub.verify_token", "<redacted>");
+  const payload = JSON.stringify(Object.fromEntries(params));
 
   if (mode !== "subscribe" || token !== c.env.STRAVA_VERIFY_TOKEN || !challenge) {
+    c.executionCtx.waitUntil(
+      logWebhookEvent(c.env.DB, { kind: "validate", outcome: "forbidden", payload }).catch(() => {}),
+    );
     return c.json({ error: "forbidden" }, 403);
   }
+  c.executionCtx.waitUntil(
+    logWebhookEvent(c.env.DB, { kind: "validate", outcome: "ok", payload }).catch(() => {}),
+  );
   return c.json({ "hub.challenge": challenge });
 });
 
@@ -44,20 +54,53 @@ webhook.get("/:token", (c) => {
  */
 webhook.post("/:token", async (c) => {
   if (c.req.param("token") !== c.env.STRAVA_VERIFY_TOKEN) {
+    c.executionCtx.waitUntil(
+      logWebhookEvent(c.env.DB, { kind: "event", outcome: "bad_token" }).catch(() => {}),
+    );
     return c.json({ ok: true });
   }
 
+  const rawBody = await c.req.text();
   let event: StravaWebhookEvent | null = null;
   try {
-    event = (await c.req.json()) as StravaWebhookEvent;
+    event = JSON.parse(rawBody) as StravaWebhookEvent;
   } catch {
     // A body we cannot parse is still acknowledged; retrying it would not help.
+    c.executionCtx.waitUntil(
+      logWebhookEvent(c.env.DB, { kind: "event", outcome: "bad_json", payload: rawBody }).catch(() => {}),
+    );
     return c.json({ ok: true });
   }
 
   const e = event;
   c.executionCtx.waitUntil(
-    handleEvent(c.env, e).catch((err) => console.error("ingest failed", err)),
+    handleEvent(c.env, e)
+      .then((row) =>
+        logWebhookEvent(c.env.DB, {
+          kind: "event",
+          object_type: e.object_type,
+          object_id: e.object_id,
+          aspect_type: e.aspect_type,
+          owner_id: e.owner_id,
+          outcome: "ok",
+          payload: rawBody,
+          activity_raw: row?.raw ?? null,
+        }),
+      )
+      .catch((err) => {
+        console.error("ingest failed", err);
+        return logWebhookEvent(c.env.DB, {
+          kind: "event",
+          object_type: e.object_type,
+          object_id: e.object_id,
+          aspect_type: e.aspect_type,
+          owner_id: e.owner_id,
+          outcome: "error",
+          detail: err instanceof Error ? err.message : String(err),
+          payload: rawBody,
+        });
+      })
+      .catch(() => {}),
   );
 
   return c.json({ ok: true });

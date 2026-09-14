@@ -62,7 +62,7 @@ describe("useLiveUpdates", () => {
     await render(createElement(Wrapper, null, createElement(Probe)));
 
     FakeSocket.last?.onmessage?.({
-      data: JSON.stringify({ type: "activity.upsert", activity: { id: 1 } }),
+      data: JSON.stringify({ type: "activity.upsert", activity: { id: 1 }, aspect: "create" }),
     });
 
     expect(spy).toHaveBeenCalledWith({ queryKey: ["activities"] });
@@ -88,7 +88,11 @@ describe("useLiveUpdates", () => {
     const screen = await render(createElement(Wrapper, null, createElement(Probe)));
 
     FakeSocket.last?.onmessage?.({
-      data: JSON.stringify({ type: "activity.upsert", activity: { id: 42, name: "Run" } }),
+      data: JSON.stringify({
+        type: "activity.upsert",
+        activity: { id: 42, name: "Run" },
+        aspect: "create",
+      }),
     });
     await screen.rerender(createElement(Wrapper, null, createElement(Probe)));
     expect(lastResult?.heroArrival?.id).toBe(42);
@@ -97,6 +101,25 @@ describe("useLiveUpdates", () => {
     lastResult?.dismissHero();
     await screen.rerender(createElement(Wrapper, null, createElement(Probe)));
     expect(lastResult?.heroArrival).toBeNull();
+  });
+
+  it("flags an update as updatedIds, not arrivedIds/hero, and skips the toast name", async () => {
+    const Wrapper = wrap(client);
+    const screen = await render(createElement(Wrapper, null, createElement(Probe)));
+
+    FakeSocket.last?.onmessage?.({
+      data: JSON.stringify({
+        type: "activity.upsert",
+        activity: { id: 7, name: "Renamed Run" },
+        aspect: "update",
+      }),
+    });
+    await screen.rerender(createElement(Wrapper, null, createElement(Probe)));
+
+    expect(lastResult?.updatedIds.has(7)).toBe(true);
+    expect(lastResult?.arrivedIds.has(7)).toBe(false);
+    expect(lastResult?.heroArrival).toBeNull();
+    expect(lastResult?.lastArrivalName).toBeNull();
   });
 
   it("never opens the socket while there is no session", async () => {
