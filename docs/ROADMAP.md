@@ -59,6 +59,27 @@ Priority order:
 7. **Coach on the surface** — a one-line "Coach's take" on Today after
    arrivals (opt-in; it costs an API call per answer).
 
+## Ops / infra
+
+- **Self-healing webhook subscription.** Registering the Strava push
+  subscription is currently a manual step (`node scripts/webhook.ts create
+  <url>`, reading credentials from `.dev.vars` or inline env vars) that has to
+  be re-run by hand after every host change or token rotation. The worker
+  already holds `STRAVA_CLIENT_ID`/`STRAVA_CLIENT_SECRET`/
+  `STRAVA_VERIFY_TOKEN` as bindings, so it can make this call itself instead
+  of relying on an operator's local script. Two ways to trigger it, in order
+  of preference:
+  - **Admin endpoint (try first).** An authenticated `/admin/webhook/sync`
+    route that lists the current Strava subscription and creates/replaces it
+    when missing or pointed at the wrong `APP_URL`. Hit once after each
+    deploy (by hand, or as a post-deploy CI step) — simpler and more
+    predictable than a cron doing it silently, and easier to fold into a
+    deploy pipeline later.
+  - **Cron self-heal (fallback/later).** Fold the same check into the
+    existing hourly `scheduled()` handler (`worker/index.ts`) so it corrects
+    itself with no operator action at all. More "automatic" but harder to
+    observe when it fires and silently fixes (or fails to fix) things.
+
 ## Constraints that stay load-bearing
 
 - Single athlete; gated by `ALLOWED_ATHLETE_ID`.
