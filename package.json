@@ -22,7 +22,9 @@
     "db:wipe-athlete": "node --experimental-strip-types scripts/db-wipe-athlete.ts",
     "lock-athlete": "node --experimental-strip-types scripts/lock-athlete.ts",
     "whoami": "node --experimental-strip-types scripts/whoami.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "shadscan": "pnpm dlx @shadscan/cli@latest",
+    "knip": "knip"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
@@ -51,6 +53,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/browser": "^4.1.11",
     "@vitest/browser-playwright": "4.1.11",
+    "knip": "^6.35.1",
     "playwright": "^1.63.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",

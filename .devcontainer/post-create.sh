@@ -68,13 +68,11 @@ pnpm add -g wrangler
 
 # ─── Google Chrome stable ─────────────────────────────────────────────────────
 # Installs Chrome stable for chrome-devtools-mcp (headless DevTools inspection).
-# Playwright uses its own Chromium build; this is a separate binary.
+# Playwright uses its own Chromium build; this is a separate binary. Uses the
+# apt-repo installer script (registers Google's signing key + apt source) rather
+# than a one-off .deb download, so dependency resolution is handled by apt.
 echo "--> Installing Google Chrome stable..."
-CHROME_DEB=$(mktemp --suffix=.deb)
-curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o "$CHROME_DEB"
-sudo apt-get update
-sudo apt-get install -y "$CHROME_DEB"
-rm -f "$CHROME_DEB"
+sudo bash .devcontainer/install-chrome.sh
 
 # ─── cloudflared ────────────────────────────────────────────────────────────────
 # Needed for `pnpm tunnel` — exposes the local dev server over public HTTPS so

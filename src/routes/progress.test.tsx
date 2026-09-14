@@ -49,7 +49,7 @@ describe("Progress", () => {
     ]);
     await page.getByRole("spinbutton", { name: "Weekly distance goal in kilometres" }).fill("10");
     await page.getByRole("button", { name: "Set" }).click();
-    await expect.element(page.getByText(/10 km/)).toBeInTheDocument();
+    await expect.element(page.getByText(/\/ 10 km/)).toBeInTheDocument();
   });
 
   it("shows personal records derived from the history", async () => {

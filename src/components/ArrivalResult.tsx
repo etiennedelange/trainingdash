@@ -28,6 +28,7 @@ export function ArrivalResult({ today = todayLocalDate() }: { today?: string }) 
   // Records are only trustworthy once the full history is on the client —
   // before then the arriving activity would look like a record against nothing.
   const newRecords = data ? recordsSetBy(rows, hero) : undefined;
+  const isFirstActivity = !!data && data.length === 0;
 
   return (
     <div className="p-10 pb-0">
@@ -36,6 +37,9 @@ export function ArrivalResult({ today = todayLocalDate() }: { today?: string }) 
         context={{ ...comparison, streak: streak.current, goalKm, newRecords }}
         onDismiss={dismiss}
       />
+      {isFirstActivity ? (
+        <p className="mt-2 text-xs text-muted">Nothing here yet — this is your first activity.</p>
+      ) : null}
     </div>
   );
 }

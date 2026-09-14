@@ -30,8 +30,14 @@ export function AccountStatus() {
 
   // The main content area already carries the one, centered "Connect
   // Strava" CTA (via DataError) whenever a page's data is unavailable — the
-  // sidebar footer stays empty rather than showing a second copy of it.
-  if (!data || isError || !data.connected) return null;
+  // sidebar footer shows a quiet status line instead of a second copy of it.
+  if (isError || !data) return null;
+
+  if (!data.connected) {
+    return (
+      <p className="px-3 text-xs text-muted">No data yet — connect Strava to get started.</p>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1">
