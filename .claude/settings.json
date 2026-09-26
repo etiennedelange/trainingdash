@@ -72,13 +72,20 @@
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-    "context7@claude-plugins-official": true
+    "context7@claude-plugins-official": true,
+    "personal-context@personal-context": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
       "source": {
         "source": "github",
         "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "personal-context": {
+      "source": {
+        "source": "github",
+        "repo": "etiennedelange/personal-context"
       }
     }
   }

@@ -6,20 +6,19 @@ set -e
 # ~/.local and ~/.config. Docker creates missing parent directories (and, for a
 # fresh named volume, the mount point itself) as root, regardless of remoteUser.
 # So ~/.local, ~/.local/share, and ~/.claude can end up root-owned even though
-# the mounted leaf dirs look fine. Claude Code's installer writes into sibling
-# paths (~/.local/bin, ~/.local/share/claude) under that same ~/.local, so fix
-# ownership of everything up front, before either CLI installs, so this survives
-# container rebuilds without manual intervention.
+# the mounted leaf dirs look fine. pnpm and chrome-devtools-mcp write into
+# sibling paths under that same ~/.local, so fix ownership of everything up
+# front, so this survives container rebuilds without manual intervention.
 sudo mkdir -p "$HOME/.local" "$HOME/.config" "$HOME/.claude"
 sudo chown -R "$(id -u):$(id -g)" "$HOME/.local" "$HOME/.config" "$HOME/.claude"
 
-# ─── Claude Code CLI ───────────────────────────────────────────────────────────
-# Always reinstall the binary to stay current. Auth (~/.claude/.credentials.json)
-# and session/project history under ~/.claude live in the trainingdash-claude-data
-# volume mounted in devcontainer.json, so they survive rebuilds on their own.
-# ~/.claude.json is a single file outside that mounted directory, so persist it by
-# relocating it into the volume once and symlinking it back on every rebuild.
-echo "--> Installing Claude Code CLI..."
+# ─── Claude Code config ─────────────────────────────────────────────────────────
+# The CLI itself comes from the claude-code devcontainer feature (as in the notes
+# repo). Auth (~/.claude/.credentials.json) and session/project history under
+# ~/.claude live in the trainingdash-claude-data volume mounted in
+# devcontainer.json, so they survive rebuilds on their own. ~/.claude.json is a
+# single file outside that mounted directory, so persist it by relocating it into
+# the volume once and symlinking it back on every rebuild.
 CLAUDE_CONFIG="$HOME/.claude.json"
 CLAUDE_CONFIG_PERSISTED="$HOME/.claude/claude.json"
 if [ -f "$CLAUDE_CONFIG" ] && [ ! -L "$CLAUDE_CONFIG" ]; then
@@ -27,22 +26,18 @@ if [ -f "$CLAUDE_CONFIG" ] && [ ! -L "$CLAUDE_CONFIG" ]; then
 fi
 ln -sf "$CLAUDE_CONFIG_PERSISTED" "$CLAUDE_CONFIG"
 
-CLAUDE_INSTALL=$(mktemp)
-curl -fsSL https://claude.ai/install.sh -o "$CLAUDE_INSTALL"
-bash "$CLAUDE_INSTALL"
-rm -f "$CLAUDE_INSTALL"
-
 # ─── OpenCode CLI ───────────────────────────────────────────────────────────────
-# Always reinstall the binary to stay current. Sessions, auth, and config live in
-# the mounted volumes declared in devcontainer.json, so they survive rebuilds.
-echo "--> Preparing OpenCode persistent state..."
-mkdir -p "$HOME/.local/share/opencode" "$HOME/.config/opencode" "$HOME/.local/state/opencode"
-
+# Installed from npm (as in the notes repo) so it floats to latest on every
+# rebuild. Sessions, auth (auth.json), and config live in the mounted volumes
+# declared in devcontainer.json, so they survive rebuilds.
 echo "--> Installing OpenCode CLI..."
-OPENCODE_INSTALL=$(mktemp)
-curl -fsSL https://opencode.ai/install -o "$OPENCODE_INSTALL"
-bash "$OPENCODE_INSTALL"
-rm -f "$OPENCODE_INSTALL"
+npm config set allow-scripts='opencode-ai' --location=user
+npm install -g opencode-ai
+
+# auth.json in the data dir holds provider credentials.
+OPENCODE_DIRS="$HOME/.local/share/opencode $HOME/.config/opencode $HOME/.local/state/opencode"
+mkdir -p $OPENCODE_DIRS
+chmod 700 $OPENCODE_DIRS
 
 # ─── Project dependencies ───────────────────────────────────────────────────────
 echo "--> Installing project dependencies..."
