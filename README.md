@@ -11,7 +11,7 @@ holds the WebSocket connections that push updates to open tabs.
 
 | Area | Choice |
 |---|---|
-| UI | React 19, TypeScript, Tailwind 4, Motion, Recharts |
+| UI | React 19, TypeScript, Tailwind 4, ECharts, MapLibre |
 | Data | TanStack Query, TanStack Router |
 | Server | Cloudflare Worker (Hono), D1, Durable Object |
 | App feel | PWA (`vite-plugin-pwa`) — installable, offline shell |
@@ -109,6 +109,17 @@ still acks 200 but skips processing — useful for exercising the ack path only.
 
 ### 5. Deploy
 
+`wrangler.jsonc` holds the values for the author's own deployment. If you are
+deploying a fork, replace these three first:
+
+| Key | Set it to |
+|---|---|
+| `d1_databases[0].database_id` | the id printed by `wrangler d1 create` (Setup step 2) |
+| `vars.APP_URL` | your deployed origin, e.g. `https://trainingdash.<you>.workers.dev` |
+| `vars.ALLOWED_ATHLETE_ID` | your Strava athlete id, or `""` to let the first athlete claim the instance |
+
+Strava's "Authorization Callback Domain" must match `APP_URL`'s host.
+
 ```bash
 pnpm exec wrangler secret put STRAVA_CLIENT_ID
 pnpm exec wrangler secret put STRAVA_CLIENT_SECRET
@@ -161,3 +172,7 @@ acute:chronic load band, a weekly distance goal, personal records, and
 backfill progress — plus quick navigation (search, date-range filter, Cmd+K
 palette) are also shipped. See `docs/ROADMAP.md` for what's next (offline
 persistence, deeper progress charts, and more).
+
+## License
+
+[MIT](LICENSE)
