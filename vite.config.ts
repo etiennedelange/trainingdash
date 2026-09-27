@@ -22,7 +22,7 @@ export default defineConfig({
       manifest: {
         name: "Trainingdash",
         short_name: "Trainingdash",
-        description: "A gamified dashboard for your Strava activities",
+        description: "A personal training dashboard for your Strava activities",
         theme_color: "#0b0e13",
         background_color: "#0b0f14",
         display: "standalone",

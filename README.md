@@ -1,7 +1,8 @@
 # Trainingdash
 
-A gamified dashboard for your Strava activities, with live updates — an upload
-appears on the dashboard about a second later, with no polling and no refresh.
+A personal training dashboard for your Strava activities, with live updates —
+an upload appears on the dashboard about a second later, with no polling and
+no refresh.
 
 ## Stack
 
@@ -16,7 +17,7 @@ holds the WebSocket connections that push updates to open tabs.
 | Server | Cloudflare Worker (Hono), D1, Durable Object |
 | App feel | PWA (`vite-plugin-pwa`) — installable, offline shell |
 | Tests | Vitest (`@cloudflare/vitest-pool-workers`), Playwright |
-| Coach | Anthropic API (`claude-opus-5`) — the one paid dependency |
+| Coach *(WIP)* | Anthropic API (`claude-opus-5`) — the one paid dependency |
 
 ## How live updates work
 
@@ -165,13 +166,17 @@ the Anthropic API per question.
 ## Status
 
 The core loop is complete: OAuth, resumable backfill, webhook ingest, live
-push, an app-wide arrival result screen, and a Coach that answers questions
-about your training (optionally on your own Anthropic key, stored encrypted
-in D1). The at-a-glance "am I doing too much or too little" layer — an
-acute:chronic load band, a weekly distance goal, personal records, and
-backfill progress — plus quick navigation (search, date-range filter, Cmd+K
-palette) are also shipped. See `docs/ROADMAP.md` for what's next (offline
-persistence, deeper progress charts, and more).
+push, and an app-wide arrival result screen. The at-a-glance "am I doing too
+much or too little" layer — an acute:chronic load band, a weekly distance
+goal, personal records, and backfill progress — plus quick navigation
+(search, date-range filter, Cmd+K palette) are also shipped.
+
+The Coach (a chat that answers questions about your training, optionally on
+your own Anthropic key, stored encrypted in D1) is a **work in progress** —
+it answers questions today, but conversations aren't saved between visits and
+it isn't yet surfaced anywhere outside its own page. See `docs/ROADMAP.md`
+for what's next (offline persistence, deeper progress charts, Coach on the
+surface, and more).
 
 ## License
 

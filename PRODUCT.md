@@ -16,7 +16,7 @@ A personal dashboard that mirrors an athlete's Strava activity with near-instant
 
 ## Positioning
 
-Two things a generic Strava viewer or the stock Strava app doesn't combine: (1) near-real-time arrival — a WebSocket-pushed update roughly a second after upload, driven by Strava's webhook plus a Cloudflare Durable Object, not polling; and (2) a lightweight progress/gamification layer (streaks, weekly volume trends, sport mix) on top of raw activity data. Both the live-arrival delight and the progress framing are equally core to the pitch — this isn't just "Strava data in a nicer UI."
+Two things a generic Strava viewer or the stock Strava app doesn't combine: (1) near-real-time arrival — a WebSocket-pushed update roughly a second after upload, driven by Strava's webhook plus a Cloudflare Durable Object, not polling; and (2) a lightweight progress layer (streaks, weekly volume trends, sport mix, personal records) on top of raw activity data. Both the live-arrival delight and the progress framing are equally core to the pitch — this isn't just "Strava data in a nicer UI."
 
 ## Operating Context
 
@@ -41,6 +41,6 @@ Two things a generic Strava viewer or the stock Strava app doesn't combine: (1) 
 ## Product Principles
 
 1. Live arrival is the headline feel — updates should read as "it just happened," not "I refreshed and it's there."
-2. Progress/gamification stays lightweight and honest — real derived stats (distance, mix, trends), not invented achievements or leaderboards (single-athlete, no social layer).
+2. Progress framing stays lightweight and honest — real derived stats (distance, mix, trends), not invented achievements or leaderboards (single-athlete, no social layer).
 3. It's a personal tool first: optimize for the owner's own workflow and taste over generic onboarding or multi-user polish.
 4. No inherited brand constraints — the visual identity is free to be established/evolved in dedicated design work, independent of Strava's own branding.

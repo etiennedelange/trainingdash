@@ -48,7 +48,12 @@ export function Coach() {
   return (
     <div className="flex h-full min-h-0 flex-col p-10">
       <div className="flex items-baseline justify-between">
-        <h1 className="font-display text-[27px] font-bold">Coach</h1>
+        <div className="flex items-baseline gap-2">
+          <h1 className="font-display text-[27px] font-bold">Coach</h1>
+          <span className="inline-flex rounded-[var(--radius-control)] bg-raised px-1.5 py-0.5 font-mono text-[11px] font-bold text-muted uppercase">
+            Beta
+          </span>
+        </div>
         {keyStatus.source === "byok" ? (
           confirmingRemove ? (
             <div className="flex items-center gap-2 text-xs font-semibold">

@@ -36,8 +36,17 @@ An activity lands → the app shows "here's what it means", instantly.
 - **Search** + date-range filter on the Activities timeline (name, sport,
   From/To dates — all combinable).
 - **Cmd+K command palette** (pages + activities, keyboard-navigable).
-- **Coach bring-your-own-key** — paste an Anthropic key in-app, stored
-  encrypted in D1; the env-var key becomes optional.
+
+## Coach — work in progress
+
+A chat that answers questions about your training, on its own page. Works
+today, but still rough:
+
+- **Shipped:** streamed answers, bring-your-own-key (paste an Anthropic key
+  in-app, stored encrypted in D1; the env-var key becomes optional).
+- **Missing:** conversations aren't saved — they reset on refresh or
+  navigation — and the Coach isn't surfaced anywhere outside `/coach` (see
+  "Coach on the surface" below).
 
 ## Next
 
