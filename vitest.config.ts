@@ -15,7 +15,20 @@ const cfConfig = {
   wrangler: { configPath: "./wrangler.jsonc" },
   miniflare: {
     compatibilityFlags: ["nodejs_compat"],
-    bindings: { TEST_MIGRATIONS: migrations },
+    // Fixed dummy secrets so the suite runs on a fresh clone with no
+    // .dev.vars, and never picks up real credentials when one exists.
+    bindings: {
+      TEST_MIGRATIONS: migrations,
+      STRAVA_CLIENT_ID: "test-client-id",
+      STRAVA_CLIENT_SECRET: "test-client-secret",
+      STRAVA_VERIFY_TOKEN: "test-verify-token",
+      SESSION_SECRET: "test-session-secret-0123456789abcdef",
+      ANTHROPIC_API_KEY: "sk-ant-test",
+      VAPID_PUBLIC_KEY: "test-vapid-public-key",
+      // Tests exercise the unlocked, first-athlete-claims path; the real
+      // deployment's lock in wrangler.jsonc must not leak in.
+      ALLOWED_ATHLETE_ID: "",
+    },
   },
 };
 
