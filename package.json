@@ -39,7 +39,7 @@
     "echarts": "^6.1.0",
     "hono": "^4.13.12",
     "maplibre-gl": "^6.11.2",
-    "motion": "^13.4.6",
+    "motion": "^14.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwind-merge": "^3.7.0",
