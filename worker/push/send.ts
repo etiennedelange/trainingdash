@@ -24,7 +24,13 @@ function toPushSubscription(row: PushSubscriptionRow): PushSubscription {
 }
 
 async function buildPushRequest(env: Env, row: PushSubscriptionRow, payload: string): Promise<Request> {
-  const init = await buildPushPayload({ data: payload }, toPushSubscription(row), toVapidKeys(env));
+  // The library default TTL is 60s: a browser that is fully shut down for
+  // longer than that would never get the notification. Hold it for a day.
+  const init = await buildPushPayload(
+    { data: payload, options: { ttl: 24 * 60 * 60 } },
+    toPushSubscription(row),
+    toVapidKeys(env),
+  );
   return new Request(row.endpoint, init);
 }
 

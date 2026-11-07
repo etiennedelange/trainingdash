@@ -1,9 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function EnableNotifications({ vapidPublicKey }: { vapidPublicKey: string }) {
-  const [state, setState] = useState<"idle" | "done" | "denied" | "unsupported">(
-    "Notification" in window && "serviceWorker" in navigator ? "idle" : "unsupported",
-  );
+  const [state, setState] = useState<"idle" | "done" | "denied" | "unsupported">(() => {
+    if (!("Notification" in window && "serviceWorker" in navigator)) return "unsupported";
+    return Notification.permission === "denied" ? "denied" : "idle";
+  });
+
+  useEffect(() => {
+    if (state !== "idle" || Notification.permission !== "granted") return;
+    void navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => {
+        if (sub) setState("done");
+      });
+  }, [state]);
 
   async function enable() {
     const permission = await Notification.requestPermission();

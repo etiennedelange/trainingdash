@@ -11,6 +11,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
+      // A custom worker (not generateSW) so it can handle `push` and
+      // `notificationclick`; the offline routing lives in src/sw.ts.
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       includeAssets: ["favicon.svg", "icon-192.png", "icon-512.png"],
       // Without this, vite-plugin-pwa only registers a service worker in
       // production builds — Chrome then has no SW to base installability on,
@@ -33,15 +38,8 @@ export default defineConfig({
           { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
-        // API responses are never precached — the dashboard must not show a
-        // stale history that looks current. The shell is offline; the data is not.
-        //
-        // These four must match the Worker's own routes exactly. /webhook is
-        // matched as a prefix because the live route is /webhook/:token, not
-        // bare /webhook (see "What Plan 1 discovered").
-        navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/webhook/, /^\/live$/],
       },
     }),
     cloudflare(),
