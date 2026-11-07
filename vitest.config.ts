@@ -56,6 +56,11 @@ export default defineConfig({
         // resolves for components that import it, matching vite.config.ts.
         plugins: [react(), VitePWA({ registerType: "prompt" })],
         resolve: { alias },
+        // Pre-bundle what the browser tests import late. Otherwise Vite discovers
+        // react-dom/client mid-run, re-optimizes and reloads the page, and a test
+        // file loading at that moment fails with "Vitest failed to find the runner"
+        // (CommandPalette.test.tsx on CI's slower runners).
+        optimizeDeps: { include: ["react-dom/client"] },
         test: {
           name: "browser",
           include: ["src/**/*.test.{ts,tsx}"],
